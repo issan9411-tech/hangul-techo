@@ -1,0 +1,14 @@
+{
+  "name": "ハングル手帖",
+  "short_name": "ハングル手帖",
+  "description": "ハングルと会話を同時に学ぶ韓国語学習アプリ",
+  "lang": "ja",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#EFF3EE",
+  "theme_color": "#29539B",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
