@@ -1302,7 +1302,11 @@ async function aiSendMsg(text){
         options:{ temperature: 0.7 }
       })
     });
-    if(!res.ok) throw new Error("HTTP "+res.status);
+    if(!res.ok){
+      let detail = "";
+      try{ detail = (await res.json()).error || ""; }catch(e2){}
+      throw new Error("HTTP "+res.status+(detail ? " — "+detail : ""));
+    }
     const data = await res.json();
     const content = ((data.message && data.message.content) || "").trim() || "(応答が空でした)";
     typing.remove();
@@ -1312,7 +1316,16 @@ async function aiSendMsg(text){
     aiSpeakKr(content);
   }catch(e){
     typing.remove();
-    aiBubble("sys","AIに接続できませんでした。上の「接続テスト」で状態を確認してください。");
+    const msg = String((e && e.message) || e);
+    let hint = "「接続テスト」で状態を確認してください。";
+    if(/Failed to fetch|NetworkError|Load failed/i.test(msg)){
+      hint = "ブラウザがリクエストをブロックした可能性があります(OLLAMA_ORIGINSの設定とOllamaの再起動、Chrome/Edgeの使用を確認してください)。";
+    } else if(/HTTP 404/.test(msg)){
+      hint = "モデル名が正しいか確認してください(ollama list で一覧表示できます)。";
+    } else if(/HTTP 5\d\d|memory/i.test(msg)){
+      hint = "モデルの読み込みに失敗した可能性があります。少し待ってもう一度送るか、小さいモデル(例: exaone3.5:2.4b)を試してください。";
+    }
+    aiBubble("sys","AIエラー: "+esc(msg)+"<br>"+hint);
     aiMsgs.pop();
   }
   aiBusy = false;
