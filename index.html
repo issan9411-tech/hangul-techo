@@ -449,14 +449,25 @@ h2:first-child{margin-top:6px}
   <div id="tkVocabArea" hidden>
     <p class="hint">TOPIK級別の頻出単語です。ハングルの文字をタップすると「子音+母音+パッチム」に分解、🎤で発音チェックができます。</p>
     <div class="tk-levels" id="tvLevels" style="margin-bottom:10px"></div>
+    <input id="tvSearch" placeholder="🔍 単語をさがす(ハングル・読み・意味)" autocomplete="off"
+      style="width:100%;font:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--surface);color:var(--ink);margin-bottom:10px;box-sizing:border-box">
     <p class="progress" id="tvProg"></p>
     <div id="tvList"></div>
+  </div>
+  <div id="tkWordTestArea" hidden>
+    <p class="hint">単語帳から自動で4択テストを作ります(意味・聞き取り・日→韓の3形式)。間違えた単語は自動的に「復習」タブのデッキに追加されます。</p>
+    <div class="tk-levels" id="wtLevels" style="margin-bottom:10px"></div>
+    <div style="margin-bottom:14px"><button class="btn" id="wtGo">スタート(10問)</button></div>
+    <div class="tk-card" id="wtCard" hidden>
+      <div class="tk-top"><span id="wtInfo"></span><span id="wtScore"></span></div>
+      <div id="wtBody"></div>
+    </div>
   </div>
 </section>
 
 <!-- ============ 復習(SRS) ============ -->
 <section class="pane" id="pane-fukushu" hidden>
-  <p class="hint">忘却曲線に合わせた復習です。「OK」なら次の出題は先に、「もう一度」ならすぐに再出題。毎日少しずつ、新しいフレーズが5つずつ追加されます。</p>
+  <p class="hint">忘却曲線に合わせた復習です。「OK」なら次の出題は先に、「もう一度」ならすぐに再出題。毎日少しずつ、新しいフレーズ・単語が5つずつ追加されます(単語テストで間違えた単語も自動で追加されます)。</p>
   <div class="srs-stats">
     <div class="st"><b id="stDue">0</b><span>今日の復習</span></div>
     <div class="st"><b id="stNew">0</b><span>今日の新規</span></div>
@@ -1523,11 +1534,259 @@ const TKWORDS = [
 {lv:6,kr:"견해",kana:"キョネ",rom:"gyeonhae",jp:"見解"},
 {lv:6,kr:"성찰",kana:"ソンチャル",rom:"seongchal",jp:"省察・内省"},
 {lv:6,kr:"지향",kana:"チヒャン",rom:"jihyang",jp:"志向"},
+/* ---- 追加語彙(第2弾)---- */
+/* 1級 */
+{lv:1,kr:"엄마",kana:"オンマ",rom:"eomma",jp:"ママ・お母さん"},
+{lv:1,kr:"아빠",kana:"アッパ",rom:"appa",jp:"パパ・お父さん"},
+{lv:1,kr:"가족",kana:"カジョク",rom:"gajok",jp:"家族"},
+{lv:1,kr:"언니",kana:"オンニ",rom:"eonni",jp:"(妹から見た)姉"},
+{lv:1,kr:"오빠",kana:"オッパ",rom:"oppa",jp:"(妹から見た)兄"},
+{lv:1,kr:"누나",kana:"ヌナ",rom:"nuna",jp:"(弟から見た)姉"},
+{lv:1,kr:"형",kana:"ヒョン",rom:"hyeong",jp:"(弟から見た)兄"},
+{lv:1,kr:"동생",kana:"トンセン",rom:"dongsaeng",jp:"弟・妹"},
+{lv:1,kr:"아이",kana:"アイ",rom:"ai",jp:"子ども"},
+{lv:1,kr:"남자",kana:"ナムジャ",rom:"namja",jp:"男・男性"},
+{lv:1,kr:"여자",kana:"ヨジャ",rom:"yeoja",jp:"女・女性"},
+{lv:1,kr:"개",kana:"ケ",rom:"gae",jp:"犬"},
+{lv:1,kr:"고양이",kana:"コヤンイ",rom:"goyangi",jp:"猫"},
+{lv:1,kr:"사과",kana:"サグァ",rom:"sagwa",jp:"りんご"},
+{lv:1,kr:"우유",kana:"ウユ",rom:"uyu",jp:"牛乳"},
+{lv:1,kr:"빵",kana:"ッパン",rom:"ppang",jp:"パン"},
+{lv:1,kr:"커피",kana:"コピ",rom:"keopi",jp:"コーヒー"},
+{lv:1,kr:"차",kana:"チャ",rom:"cha",jp:"お茶・車"},
+{lv:1,kr:"버스",kana:"ポス",rom:"beoseu",jp:"バス"},
+{lv:1,kr:"역",kana:"ヨク",rom:"yeok",jp:"駅"},
+{lv:1,kr:"길",kana:"キル",rom:"gil",jp:"道"},
+{lv:1,kr:"문",kana:"ムン",rom:"mun",jp:"ドア・門"},
+{lv:1,kr:"방",kana:"パン",rom:"bang",jp:"部屋"},
+{lv:1,kr:"옷",kana:"オッ",rom:"ot",jp:"服"},
+{lv:1,kr:"신발",kana:"シンバル",rom:"sinbal",jp:"靴"},
+{lv:1,kr:"가방",kana:"カバン",rom:"gabang",jp:"かばん"},
+{lv:1,kr:"우산",kana:"ウサン",rom:"usan",jp:"傘"},
+{lv:1,kr:"전화",kana:"チョヌァ",rom:"jeonhwa",jp:"電話"},
+{lv:1,kr:"핸드폰",kana:"ヘンドゥポン",rom:"haendeupon",jp:"携帯電話"},
+{lv:1,kr:"컴퓨터",kana:"コムピュト",rom:"keompyuteo",jp:"パソコン"},
+{lv:1,kr:"생일",kana:"センイル",rom:"saengil",jp:"誕生日"},
+{lv:1,kr:"주말",kana:"チュマル",rom:"jumal",jp:"週末"},
+{lv:1,kr:"요일",kana:"ヨイル",rom:"yoil",jp:"曜日"},
+{lv:1,kr:"올해",kana:"オレ",rom:"olhae",jp:"今年"},
+{lv:1,kr:"지금",kana:"チグム",rom:"jigeum",jp:"今"},
+{lv:1,kr:"여기",kana:"ヨギ",rom:"yeogi",jp:"ここ"},
+{lv:1,kr:"거기",kana:"コギ",rom:"geogi",jp:"そこ"},
+{lv:1,kr:"저기",kana:"チョギ",rom:"jeogi",jp:"あそこ"},
+{lv:1,kr:"어디",kana:"オディ",rom:"eodi",jp:"どこ"},
+{lv:1,kr:"누구",kana:"ヌグ",rom:"nugu",jp:"誰"},
+/* 2級 */
+{lv:2,kr:"가격",kana:"カギョク",rom:"gagyeok",jp:"価格"},
+{lv:2,kr:"가게",kana:"カゲ",rom:"gage",jp:"店"},
+{lv:2,kr:"손님",kana:"ソンニム",rom:"sonnim",jp:"客"},
+{lv:2,kr:"직원",kana:"チゴン",rom:"jigwon",jp:"職員・スタッフ"},
+{lv:2,kr:"회의",kana:"フェイ",rom:"hoeui",jp:"会議"},
+{lv:2,kr:"출근",kana:"チュルグン",rom:"chulgeun",jp:"出勤"},
+{lv:2,kr:"퇴근",kana:"トェグン",rom:"toegeun",jp:"退勤"},
+{lv:2,kr:"휴가",kana:"ヒュガ",rom:"hyuga",jp:"休暇"},
+{lv:2,kr:"초대",kana:"チョデ",rom:"chodae",jp:"招待"},
+{lv:2,kr:"결혼",kana:"キョロン",rom:"gyeolhon",jp:"結婚"},
+{lv:2,kr:"연락",kana:"ヨルラク",rom:"yeollak",jp:"連絡"},
+{lv:2,kr:"질문",kana:"チルムン",rom:"jilmun",jp:"質問"},
+{lv:2,kr:"대답",kana:"テダプ",rom:"daedap",jp:"答え・返事"},
+{lv:2,kr:"소식",kana:"ソシク",rom:"sosik",jp:"知らせ・便り"},
+{lv:2,kr:"이야기",kana:"イヤギ",rom:"iyagi",jp:"話"},
+{lv:2,kr:"노래",kana:"ノレ",rom:"norae",jp:"歌"},
+{lv:2,kr:"공연",kana:"コンヨン",rom:"gongyeon",jp:"公演"},
+{lv:2,kr:"표",kana:"ピョ",rom:"pyo",jp:"チケット・票"},
+{lv:2,kr:"값",kana:"カプ",rom:"gap",jp:"値段"},
+{lv:2,kr:"할인",kana:"ハリン",rom:"harin",jp:"割引"},
+{lv:2,kr:"무료",kana:"ムリョ",rom:"muryo",jp:"無料"},
+{lv:2,kr:"근처",kana:"クンチョ",rom:"geuncheo",jp:"近く・近所"},
+{lv:2,kr:"건물",kana:"コンムル",rom:"geonmul",jp:"建物"},
+{lv:2,kr:"병원",kana:"ピョンウォン",rom:"byeongwon",jp:"病院"},
+{lv:2,kr:"약국",kana:"ヤックク",rom:"yakguk",jp:"薬局"},
+{lv:2,kr:"은행",kana:"ウネン",rom:"eunhaeng",jp:"銀行"},
+{lv:2,kr:"공항",kana:"コンハン",rom:"gonghang",jp:"空港"},
+{lv:2,kr:"호텔",kana:"ホテル",rom:"hotel",jp:"ホテル"},
+{lv:2,kr:"바다",kana:"パダ",rom:"bada",jp:"海"},
+{lv:2,kr:"산",kana:"サン",rom:"san",jp:"山"},
+{lv:2,kr:"공원",kana:"コンウォン",rom:"gongwon",jp:"公園"},
+{lv:2,kr:"꽃",kana:"コッ",rom:"kkot",jp:"花"},
+{lv:2,kr:"나무",kana:"ナム",rom:"namu",jp:"木"},
+{lv:2,kr:"비",kana:"ピ",rom:"bi",jp:"雨"},
+{lv:2,kr:"눈",kana:"ヌン",rom:"nun",jp:"雪・目"},
+{lv:2,kr:"바람",kana:"パラム",rom:"baram",jp:"風"},
+{lv:2,kr:"봄",kana:"ポム",rom:"bom",jp:"春"},
+{lv:2,kr:"여름",kana:"ヨルム",rom:"yeoreum",jp:"夏"},
+{lv:2,kr:"가을",kana:"カウル",rom:"gaeul",jp:"秋"},
+{lv:2,kr:"겨울",kana:"キョウル",rom:"gyeoul",jp:"冬"},
+/* 3級 */
+{lv:3,kr:"성공",kana:"ソンゴン",rom:"seonggong",jp:"成功"},
+{lv:3,kr:"실패",kana:"シルペ",rom:"silpae",jp:"失敗"},
+{lv:3,kr:"발표",kana:"パルピョ",rom:"balpyo",jp:"発表"},
+{lv:3,kr:"회원",kana:"フェウォン",rom:"hoewon",jp:"会員"},
+{lv:3,kr:"신청",kana:"シンチョン",rom:"sincheong",jp:"申請・申し込み"},
+{lv:3,kr:"모집",kana:"モジプ",rom:"mojip",jp:"募集"},
+{lv:3,kr:"광고",kana:"クァンゴ",rom:"gwanggo",jp:"広告"},
+{lv:3,kr:"소개",kana:"ソゲ",rom:"sogae",jp:"紹介"},
+{lv:3,kr:"추천",kana:"チュチョン",rom:"chucheon",jp:"推薦・おすすめ"},
+{lv:3,kr:"비교",kana:"ピギョ",rom:"bigyo",jp:"比較"},
+{lv:3,kr:"선택",kana:"ソンテク",rom:"seontaek",jp:"選択"},
+{lv:3,kr:"확인",kana:"ファギン",rom:"hwagin",jp:"確認"},
+{lv:3,kr:"연습",kana:"ヨンスプ",rom:"yeonseup",jp:"練習"},
+{lv:3,kr:"복습",kana:"ポクスプ",rom:"bokseup",jp:"復習"},
+{lv:3,kr:"예습",kana:"イェスプ",rom:"yeseup",jp:"予習"},
+{lv:3,kr:"시험",kana:"シホム",rom:"siheom",jp:"試験"},
+{lv:3,kr:"점수",kana:"チョムス",rom:"jeomsu",jp:"点数"},
+{lv:3,kr:"합격",kana:"ハプキョク",rom:"hapgyeok",jp:"合格"},
+{lv:3,kr:"졸업",kana:"チョロプ",rom:"joreop",jp:"卒業"},
+{lv:3,kr:"입학",kana:"イパク",rom:"iphak",jp:"入学"},
+{lv:3,kr:"유학",kana:"ユハク",rom:"yuhak",jp:"留学"},
+{lv:3,kr:"전공",kana:"チョンゴン",rom:"jeongong",jp:"専攻"},
+{lv:3,kr:"직업",kana:"チゴプ",rom:"jigeop",jp:"職業"},
+{lv:3,kr:"월급",kana:"ウォルグプ",rom:"wolgeup",jp:"月給"},
+{lv:3,kr:"성적",kana:"ソンチョク",rom:"seongjeok",jp:"成績"},
+{lv:3,kr:"숙제",kana:"スクチェ",rom:"sukje",jp:"宿題"},
+{lv:3,kr:"규칙",kana:"キュチク",rom:"gyuchik",jp:"規則"},
+{lv:3,kr:"안내",kana:"アンネ",rom:"annae",jp:"案内"},
+{lv:3,kr:"예정",kana:"イェジョン",rom:"yejeong",jp:"予定"},
+{lv:3,kr:"일정",kana:"イルチョン",rom:"iljeong",jp:"日程・スケジュール"},
+{lv:3,kr:"장소",kana:"チャンソ",rom:"jangso",jp:"場所"},
+{lv:3,kr:"기간",kana:"キガン",rom:"gigan",jp:"期間"},
+{lv:3,kr:"순서",kana:"スンソ",rom:"sunseo",jp:"順序・順番"},
+{lv:3,kr:"내용",kana:"ネヨン",rom:"naeyong",jp:"内容"},
+{lv:3,kr:"제목",kana:"チェモク",rom:"jemok",jp:"タイトル・題名"},
+{lv:3,kr:"종류",kana:"チョンニュ",rom:"jongnyu",jp:"種類"},
+{lv:3,kr:"크기",kana:"クギ",rom:"keugi",jp:"大きさ"},
+{lv:3,kr:"무게",kana:"ムゲ",rom:"muge",jp:"重さ"},
+{lv:3,kr:"속도",kana:"ソクト",rom:"sokdo",jp:"速度"},
+{lv:3,kr:"거리",kana:"コリ",rom:"geori",jp:"距離・通り"},
+/* 4級 */
+{lv:4,kr:"경쟁",kana:"キョンジェン",rom:"gyeongjaeng",jp:"競争"},
+{lv:4,kr:"협력",kana:"ヒョムニョク",rom:"hyeomnyeok",jp:"協力"},
+{lv:4,kr:"참여",kana:"チャミョ",rom:"chamyeo",jp:"参加・参画"},
+{lv:4,kr:"소통",kana:"ソトン",rom:"sotong",jp:"意思疎通・コミュニケーション"},
+{lv:4,kr:"소비",kana:"ソビ",rom:"sobi",jp:"消費"},
+{lv:4,kr:"생산",kana:"センサン",rom:"saengsan",jp:"生産"},
+{lv:4,kr:"수입",kana:"スイプ",rom:"suip",jp:"輸入・収入"},
+{lv:4,kr:"수출",kana:"スチュル",rom:"suchul",jp:"輸出"},
+{lv:4,kr:"비용",kana:"ピヨン",rom:"biyong",jp:"費用"},
+{lv:4,kr:"예산",kana:"イェサン",rom:"yesan",jp:"予算"},
+{lv:4,kr:"소득",kana:"ソドゥク",rom:"sodeuk",jp:"所得"},
+{lv:4,kr:"투자",kana:"トゥジャ",rom:"tuja",jp:"投資"},
+{lv:4,kr:"경영",kana:"キョンヨン",rom:"gyeongyeong",jp:"経営"},
+{lv:4,kr:"기업",kana:"キオプ",rom:"gieop",jp:"企業"},
+{lv:4,kr:"고객",kana:"コゲク",rom:"gogaek",jp:"顧客"},
+{lv:4,kr:"제품",kana:"チェプム",rom:"jepum",jp:"製品"},
+{lv:4,kr:"품질",kana:"プムジル",rom:"pumjil",jp:"品質"},
+{lv:4,kr:"판매",kana:"パンメ",rom:"panmae",jp:"販売"},
+{lv:4,kr:"구매",kana:"クメ",rom:"gumae",jp:"購買・購入"},
+{lv:4,kr:"계약",kana:"ケヤク",rom:"gyeyak",jp:"契約"},
+{lv:4,kr:"조사",kana:"チョサ",rom:"josa",jp:"調査"},
+{lv:4,kr:"분석",kana:"プンソク",rom:"bunseok",jp:"分析"},
+{lv:4,kr:"평가",kana:"ピョンカ",rom:"pyeongga",jp:"評価"},
+{lv:4,kr:"기준",kana:"キジュン",rom:"gijun",jp:"基準"},
+{lv:4,kr:"수준",kana:"スジュン",rom:"sujun",jp:"水準・レベル"},
+{lv:4,kr:"비율",kana:"ピユル",rom:"biyul",jp:"比率"},
+{lv:4,kr:"증가",kana:"チュンガ",rom:"jeungga",jp:"増加"},
+{lv:4,kr:"감소",kana:"カムソ",rom:"gamso",jp:"減少"},
+{lv:4,kr:"유지",kana:"ユジ",rom:"yuji",jp:"維持"},
+{lv:4,kr:"개선",kana:"ケソン",rom:"gaeseon",jp:"改善"},
+{lv:4,kr:"해결",kana:"ヘギョル",rom:"haegyeol",jp:"解決"},
+{lv:4,kr:"대책",kana:"テチェク",rom:"daechaek",jp:"対策"},
+{lv:4,kr:"피해",kana:"ピヘ",rom:"pihae",jp:"被害"},
+{lv:4,kr:"사고",kana:"サゴ",rom:"sago",jp:"事故"},
+{lv:4,kr:"안전",kana:"アンジョン",rom:"anjeon",jp:"安全"},
+{lv:4,kr:"위험",kana:"ウィホム",rom:"wiheom",jp:"危険"},
+{lv:4,kr:"보호",kana:"ポホ",rom:"boho",jp:"保護"},
+{lv:4,kr:"오염",kana:"オヨム",rom:"oyeom",jp:"汚染"},
+{lv:4,kr:"자원",kana:"チャウォン",rom:"jawon",jp:"資源"},
+{lv:4,kr:"시대",kana:"シデ",rom:"sidae",jp:"時代"},
+/* 5級 */
+{lv:5,kr:"정체성",kana:"チョンチェソン",rom:"jeongcheseong",jp:"アイデンティティ(正体性)"},
+{lv:5,kr:"편견",kana:"ピョンギョン",rom:"pyeongyeon",jp:"偏見"},
+{lv:5,kr:"차별",kana:"チャビョル",rom:"chabyeol",jp:"差別"},
+{lv:5,kr:"평등",kana:"ピョンドゥン",rom:"pyeongdeung",jp:"平等"},
+{lv:5,kr:"권리",kana:"クォルリ",rom:"gwolli",jp:"権利"},
+{lv:5,kr:"의무",kana:"ウィム",rom:"uimu",jp:"義務"},
+{lv:5,kr:"자유",kana:"チャユ",rom:"jayu",jp:"自由"},
+{lv:5,kr:"질서",kana:"チルソ",rom:"jilseo",jp:"秩序"},
+{lv:5,kr:"윤리",kana:"ユルリ",rom:"yulli",jp:"倫理"},
+{lv:5,kr:"도덕",kana:"トドク",rom:"dodeok",jp:"道徳"},
+{lv:5,kr:"법률",kana:"ポムニュル",rom:"beomnyul",jp:"法律"},
+{lv:5,kr:"정의",kana:"チョンイ",rom:"jeongui",jp:"正義・定義"},
+{lv:5,kr:"제안",kana:"チェアン",rom:"jean",jp:"提案"},
+{lv:5,kr:"협상",kana:"ヒョプサン",rom:"hyeopsang",jp:"交渉"},
+{lv:5,kr:"타협",kana:"タヒョプ",rom:"tahyeop",jp:"妥協"},
+{lv:5,kr:"동의",kana:"トンイ",rom:"dongui",jp:"同意"},
+{lv:5,kr:"반대",kana:"パンデ",rom:"bandae",jp:"反対"},
+{lv:5,kr:"찬성",kana:"チャンソン",rom:"chanseong",jp:"賛成"},
+{lv:5,kr:"설득",kana:"ソルトゥク",rom:"seoldeuk",jp:"説得"},
+{lv:5,kr:"소외",kana:"ソウェ",rom:"sooe",jp:"疎外"},
+{lv:5,kr:"고립",kana:"コリプ",rom:"gorip",jp:"孤立"},
+{lv:5,kr:"불안",kana:"プラン",rom:"buran",jp:"不安"},
+{lv:5,kr:"압박",kana:"アプパク",rom:"apbak",jp:"圧迫・プレッシャー"},
+{lv:5,kr:"부담",kana:"プダム",rom:"budam",jp:"負担"},
+{lv:5,kr:"여유",kana:"ヨユ",rom:"yeoyu",jp:"余裕"},
+{lv:5,kr:"만족",kana:"マンジョク",rom:"manjok",jp:"満足"},
+{lv:5,kr:"불만",kana:"プルマン",rom:"bulman",jp:"不満"},
+{lv:5,kr:"요구",kana:"ヨグ",rom:"yogu",jp:"要求"},
+{lv:5,kr:"요청",kana:"ヨチョン",rom:"yocheong",jp:"要請"},
+{lv:5,kr:"지원",kana:"チウォン",rom:"jiwon",jp:"支援"},
+{lv:5,kr:"혜택",kana:"ヘテク",rom:"hyetaek",jp:"恩恵・特典"},
+{lv:5,kr:"복지",kana:"ポクチ",rom:"bokji",jp:"福祉"},
+{lv:5,kr:"고용",kana:"コヨン",rom:"goyong",jp:"雇用"},
+{lv:5,kr:"실업",kana:"シロプ",rom:"sireop",jp:"失業"},
+{lv:5,kr:"은퇴",kana:"ウンテ",rom:"euntoe",jp:"引退"},
+{lv:5,kr:"저출산",kana:"チョチュルサン",rom:"jeochulsan",jp:"少子化(低出産)"},
+{lv:5,kr:"고령화",kana:"コリョンファ",rom:"goryeonghwa",jp:"高齢化"},
+{lv:5,kr:"인구",kana:"イング",rom:"ingu",jp:"人口"},
+{lv:5,kr:"개발",kana:"ケバル",rom:"gaebal",jp:"開発"},
+{lv:5,kr:"보존",kana:"ポジョン",rom:"bojon",jp:"保存・保全"},
+/* 6級 */
+{lv:6,kr:"통찰",kana:"トンチャル",rom:"tongchal",jp:"洞察"},
+{lv:6,kr:"직관",kana:"チクァン",rom:"jikgwan",jp:"直観"},
+{lv:6,kr:"사유",kana:"サユ",rom:"sayu",jp:"思惟・思索"},
+{lv:6,kr:"개념",kana:"ケニョム",rom:"gaenyeom",jp:"概念"},
+{lv:6,kr:"논리",kana:"ノルリ",rom:"nolli",jp:"論理"},
+{lv:6,kr:"모순",kana:"モスン",rom:"mosun",jp:"矛盾"},
+{lv:6,kr:"역설",kana:"ヨクソル",rom:"yeokseol",jp:"逆説"},
+{lv:6,kr:"전제",kana:"チョンジェ",rom:"jeonje",jp:"前提"},
+{lv:6,kr:"가설",kana:"カソル",rom:"gaseol",jp:"仮説"},
+{lv:6,kr:"검증",kana:"コムジュン",rom:"geomjeung",jp:"検証"},
+{lv:6,kr:"입증",kana:"イプチュン",rom:"ipjeung",jp:"立証"},
+{lv:6,kr:"반박",kana:"パンバク",rom:"banbak",jp:"反駁・反論"},
+{lv:6,kr:"옹호",kana:"オンホ",rom:"ongho",jp:"擁護"},
+{lv:6,kr:"비유",kana:"ピユ",rom:"biyu",jp:"比喩"},
+{lv:6,kr:"상징",kana:"サンジン",rom:"sangjing",jp:"象徴"},
+{lv:6,kr:"함축",kana:"ハムチュク",rom:"hamchuk",jp:"含蓄・含意"},
+{lv:6,kr:"여운",kana:"ヨウン",rom:"yeoun",jp:"余韻"},
+{lv:6,kr:"정서",kana:"チョンソ",rom:"jeongseo",jp:"情緒"},
+{lv:6,kr:"심리",kana:"シムニ",rom:"simni",jp:"心理"},
+{lv:6,kr:"무의식",kana:"ムイシク",rom:"muuisik",jp:"無意識"},
+{lv:6,kr:"본능",kana:"ポンヌン",rom:"bonneung",jp:"本能"},
+{lv:6,kr:"이성",kana:"イソン",rom:"iseong",jp:"理性"},
+{lv:6,kr:"감성",kana:"カムソン",rom:"gamseong",jp:"感性"},
+{lv:6,kr:"직면",kana:"チンミョン",rom:"jingmyeon",jp:"直面"},
+{lv:6,kr:"극단",kana:"ククタン",rom:"geukdan",jp:"極端"},
+{lv:6,kr:"절충",kana:"チョルチュン",rom:"jeolchung",jp:"折衷"},
+{lv:6,kr:"균형",kana:"キュニョン",rom:"gyunhyeong",jp:"均衡・バランス"},
+{lv:6,kr:"편차",kana:"ピョンチャ",rom:"pyeoncha",jp:"偏差・ばらつき"},
+{lv:6,kr:"격차",kana:"キョクチャ",rom:"gyeokcha",jp:"格差"},
+{lv:6,kr:"양극화",kana:"ヤンクックァ",rom:"yanggeukhwa",jp:"二極化"},
+{lv:6,kr:"침체",kana:"チムチェ",rom:"chimche",jp:"沈滞・低迷"},
+{lv:6,kr:"호황",kana:"ホファン",rom:"hohwang",jp:"好況"},
+{lv:6,kr:"불황",kana:"プルァン",rom:"bulhwang",jp:"不況"},
+{lv:6,kr:"번영",kana:"ポニョン",rom:"beonyeong",jp:"繁栄"},
+{lv:6,kr:"쇠퇴",kana:"スェテ",rom:"soetoe",jp:"衰退"},
+{lv:6,kr:"전환",kana:"チョヌァン",rom:"jeonhwan",jp:"転換"},
+{lv:6,kr:"혁신",kana:"ヒョクシン",rom:"hyeoksin",jp:"革新"},
+{lv:6,kr:"창의성",kana:"チャンイソン",rom:"changuiseong",jp:"創意性・創造性"},
+{lv:6,kr:"잠재력",kana:"チャムジェリョク",rom:"jamjaeryeok",jp:"潜在力"},
+{lv:6,kr:"발휘",kana:"パルフィ",rom:"balhwi",jp:"発揮"},
 ];
 
 const TK_MODES = [
  {id:"quiz", label:"📝 問題練習"},
  {id:"vocab", label:"📚 単語帳"},
+ {id:"wtest", label:"🎯 単語テスト"},
 ];
 let tkMode = "quiz", tvLv = 1;
 let tvKnown = new Set();
@@ -1543,7 +1802,9 @@ TK_MODES.forEach(m=>{
     tkModesEl.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", TK_MODES[i].id===tkMode));
     document.getElementById("tkQuizArea").hidden = tkMode!=="quiz";
     document.getElementById("tkVocabArea").hidden = tkMode!=="vocab";
+    document.getElementById("tkWordTestArea").hidden = tkMode!=="wtest";
     if(tkMode==="vocab") tvRender();
+    if(tkMode==="wtest") wtRenderLevels();
   });
   tkModesEl.appendChild(b);
 });
@@ -1566,7 +1827,7 @@ function tvRender(){
     "全体の進捗: <b>"+tvKnown.size+"</b> / "+TKWORDS.length+" 語";
   const list = document.getElementById("tvList");
   list.innerHTML = "";
-  TKWORDS.filter(w=>w.lv===tvLv).forEach(w=>{
+  tvFilter().forEach(w=>{
     const card = document.createElement("div");
     card.className = "phrase";
     const kline = document.createElement("div");
@@ -1595,7 +1856,7 @@ function tvRender(){
     dec.className = "decomp"; dec.style.display = "none";
     card.appendChild(kline);
     card.insertAdjacentHTML("beforeend",
-      "<div class='kana'>"+w.kana+"</div><div class='roman'>"+w.rom+"</div><div class='jp'>"+w.jp+"</div>");
+      "<div class='kana'>"+w.kana+"</div><div class='roman'>"+w.rom+"</div><div class='jp'>"+w.jp+" <span style='color:var(--mustard);font-size:11px;font-weight:700'>"+w.lv+"級</span></div>");
     const row = document.createElement("div");
     row.className = "row";
     const b1 = document.createElement("button");
@@ -1626,6 +1887,131 @@ function tvRender(){
     list.appendChild(card);
   });
 }
+
+
+/* ================= 単語検索・SRS統合・単語テスト ================= */
+const SRS_POOL = FLAT.concat(TKWORDS.map(w=>({cat:"TOPIK単語・"+w.lv+"級", kr:w.kr, kana:w.kana, rom:w.rom, jp:w.jp})));
+function tvQuery(){ const el = document.getElementById("tvSearch"); return el ? el.value.trim().toLowerCase() : ""; }
+function tvFilter(){
+  const q = tvQuery();
+  if(!q) return TKWORDS.filter(w=>w.lv===tvLv);
+  return TKWORDS.filter(w=>(w.kr+" "+w.kana+" "+w.rom+" "+w.jp).toLowerCase().includes(q)).slice(0,80);
+}
+document.getElementById("tvSearch").addEventListener("input", ()=>{
+  if(!document.getElementById("tkVocabArea").hidden) tvRender();
+});
+
+let wtLv = 1, wtSet = [], wtIdx = 0, wtScoreN = 0, wtLocked = false, wtWrong = [];
+function wtRenderLevels(){
+  const box = document.getElementById("wtLevels");
+  box.innerHTML = "";
+  for(let lv=1; lv<=6; lv++){
+    const b = document.createElement("button");
+    b.textContent = lv+"級";
+    b.setAttribute("aria-pressed", lv===wtLv);
+    b.addEventListener("click",()=>{
+      wtLv = lv;
+      box.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", i+1===lv));
+    });
+    box.appendChild(b);
+  }
+}
+function wtStart(){
+  const pool = TKWORDS.filter(w=>w.lv===wtLv);
+  wtSet = tkShuffle(pool).slice(0,10);
+  wtIdx = 0; wtScoreN = 0; wtWrong = [];
+  document.getElementById("wtCard").hidden = false;
+  wtRenderQ();
+}
+function wtWrongToSrs(w){
+  if(!srs[w.kr]){ srs[w.kr] = {iv:0, due:Date.now(), reps:0}; srsSave(); srsBadge(); }
+}
+function wtRenderQ(){
+  wtLocked = false;
+  const w = wtSet[wtIdx];
+  const mode = Math.floor(Math.random()*3);
+  document.getElementById("wtInfo").innerHTML = "<span class='tk-badge'>"+wtLv+"級・単語</span> 第"+(wtIdx+1)+"問 / "+wtSet.length;
+  document.getElementById("wtScore").textContent = "正解 "+wtScoreN;
+  const body = document.getElementById("wtBody");
+  body.innerHTML = "";
+  let qText, choices, correct, choiceKr;
+  const others = tkShuffle(TKWORDS.filter(x=>x.lv===wtLv && x.kr!==w.kr)).slice(0,3);
+  if(mode===0){
+    qText = "この単語の意味は?";
+    body.insertAdjacentHTML("beforeend","<div style='text-align:center;font-size:44px;font-weight:700;color:var(--indigo)' class='kr'>"+tkEsc(w.kr)+"</div>");
+    correct = w.jp; choices = others.map(x=>x.jp).concat([correct]); choiceKr = false;
+    speak(w.kr, 0.8);
+  } else if(mode===1){
+    qText = "音声の単語はどれ?";
+    const l = document.createElement("div");
+    l.className = "tk-listen";
+    const b = document.createElement("button");
+    b.textContent = "🔊 もう一度聞く";
+    b.addEventListener("click",()=>speak(w.kr, 0.7));
+    l.appendChild(b);
+    body.appendChild(l);
+    correct = w.kr; choices = others.map(x=>x.kr).concat([correct]); choiceKr = true;
+    speak(w.kr, 0.7);
+  } else {
+    qText = "「"+w.jp+"」を韓国語で?";
+    correct = w.kr; choices = others.map(x=>x.kr).concat([correct]); choiceKr = true;
+  }
+  body.insertAdjacentHTML("afterbegin","<div class='tk-q'>"+tkEsc(qText)+"</div>");
+  const box = document.createElement("div");
+  box.className = "tk-choices";
+  tkShuffle(choices).forEach(opt=>{
+    const b = document.createElement("button");
+    if(choiceKr) b.classList.add("kr");
+    b.textContent = opt;
+    b.addEventListener("click",()=>wtAnswer(b, opt, correct, w, box));
+    box.appendChild(b);
+  });
+  body.appendChild(box);
+}
+function wtAnswer(btn, opt, correct, w, box){
+  if(wtLocked) return;
+  wtLocked = true;
+  const ok = opt===correct;
+  if(ok){ wtScoreN++; btn.classList.add("hit"); }
+  else {
+    btn.classList.add("miss");
+    [...box.children].forEach(b=>{ if(b.textContent===correct) b.classList.add("hit"); });
+    wtWrong.push(w);
+    wtWrongToSrs(w);
+  }
+  speak(w.kr, 0.8);
+  document.getElementById("wtScore").textContent = "正解 "+wtScoreN;
+  const body = document.getElementById("wtBody");
+  body.insertAdjacentHTML("beforeend",
+    "<div class='tk-ex'>"+(ok?"⭕ <b>正解!</b>":"❌ 正解は「<span class='kr'>"+tkEsc(correct)+"</span>」")+
+    "<br><span class='kr'>"+tkEsc(w.kr)+"</span>("+tkEsc(w.kana)+" / "+tkEsc(w.rom)+")= "+tkEsc(w.jp)+
+    (ok?"":"<br>📥 この単語を「復習」タブに追加しました")+"</div>");
+  const nx = document.createElement("div");
+  nx.style.cssText = "margin-top:10px;text-align:center";
+  const nb = document.createElement("button");
+  nb.className = "btn";
+  nb.textContent = wtIdx+1 < wtSet.length ? "次の問題 →" : "結果を見る";
+  nb.addEventListener("click",()=>{
+    wtIdx++;
+    if(wtIdx < wtSet.length) wtRenderQ(); else wtResult();
+  });
+  nx.appendChild(nb);
+  body.appendChild(nx);
+}
+function wtResult(){
+  const n = wtSet.length;
+  document.getElementById("wtInfo").innerHTML = "<span class='tk-badge'>結果</span>";
+  document.getElementById("wtScore").textContent = "";
+  const body = document.getElementById("wtBody");
+  body.innerHTML =
+    "<div class='tk-result'><div class='big'>"+wtScoreN+" / "+n+"</div>"+
+    "<div class='msg'>"+(wtScoreN===n?"🎉 全問正解!":wtWrong.length+"個の単語を「復習」タブに追加しました。忘れた頃に再出題されます。")+"</div>"+
+    "<div style='display:flex;gap:8px;justify-content:center;flex-wrap:wrap'>"+
+    "<button class='btn' id='wtAgain'>もう一度</button></div></div>";
+  document.getElementById("wtAgain").addEventListener("click", wtStart);
+}
+document.getElementById("wtGo").addEventListener("click", wtStart);
+wtRenderLevels();
 
 
 /* ================= 復習(SRS) ================= */
@@ -1661,9 +2047,9 @@ function srsBadge(){
 }
 function srsBuild(){
   const now = Date.now();
-  const due = FLAT.filter(p=>srs[p.kr] && srs[p.kr].due<=now)
+  const due = SRS_POOL.filter(p=>srs[p.kr] && srs[p.kr].due<=now)
     .sort((a,b)=>srs[a.kr].due-srs[b.kr].due);
-  const unseen = FLAT.filter(p=>!srs[p.kr]).slice(0, newAllowance());
+  const unseen = SRS_POOL.filter(p=>!srs[p.kr]).slice(0, newAllowance());
   srsNewSet = new Set(unseen.map(p=>p.kr));
   srsQueue = [...due, ...unseen];
   document.getElementById("stDue").textContent = due.length;
