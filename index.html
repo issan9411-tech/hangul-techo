@@ -289,6 +289,48 @@ h2:first-child{margin-top:6px}
 }
 .aiinfo code{background:var(--surface2);border-radius:6px;padding:1px 7px;font-size:12.5px}
 
+/* ---- TOPIK ---- */
+.tk-groups{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.tk-group .glbl{font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px}
+.tk-levels{display:flex;gap:6px;flex-wrap:wrap}
+.tk-levels button{
+  font:inherit;font-weight:700;font-size:13px;
+  border:1.5px solid var(--line);border-radius:11px;
+  background:var(--surface);color:var(--ink);
+  padding:7px 14px;cursor:pointer;text-align:center;
+}
+.tk-levels button[aria-pressed="true"]{border-color:var(--indigo);background:var(--indigo-soft);color:var(--indigo)}
+.tk-levels button .rate{display:block;font-size:10.5px;font-weight:400;color:var(--ink-soft)}
+.tk-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:18px;box-shadow:var(--shadow);
+}
+.tk-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-variant-numeric:tabular-nums}
+.tk-badge{display:inline-block;background:var(--red-soft);color:var(--red);border-radius:999px;padding:1px 10px;font-weight:700;font-size:11.5px}
+.tk-passage{background:var(--surface2);border-radius:10px;padding:10px 13px;font-size:15px;line-height:1.8;margin:8px 0}
+.tk-q{font-size:15.5px;font-weight:700;margin:10px 0}
+.tk-choices{display:flex;flex-direction:column;gap:8px}
+.tk-choices button{
+  font:inherit;font-size:14.5px;text-align:left;
+  border:1.5px solid var(--line);border-radius:11px;
+  background:var(--surface);color:var(--ink);
+  padding:10px 13px;cursor:pointer;
+}
+.tk-choices button.hit{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+.tk-choices button.miss{border-color:var(--red);color:var(--red)}
+.tk-ex{background:var(--indigo-soft);border-radius:10px;padding:10px 13px;font-size:13px;margin-top:10px}
+.tk-listen{text-align:center;margin:10px 0}
+.tk-listen button{
+  font:inherit;font-size:15px;font-weight:700;
+  background:var(--indigo-soft);color:var(--indigo);
+  border:0;border-radius:14px;padding:12px 24px;cursor:pointer;
+}
+.tk-result{text-align:center;padding:10px 0}
+.tk-result .big{font-size:40px;font-weight:700;color:var(--indigo);font-variant-numeric:tabular-nums}
+.tk-result .msg{font-weight:700;margin:6px 0 12px}
+.tk-wrong{margin-top:12px;text-align:left;font-size:13px}
+.tk-wrong .w{border-top:1px dashed var(--line);padding:8px 0}
+
 @media (max-width:430px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}
   .quiz .q{font-size:58px}
@@ -310,6 +352,7 @@ h2:first-child{margin-top:6px}
   <button role="tab" aria-selected="false" data-pane="kaiwa">フレーズ</button>
   <button role="tab" aria-selected="false" data-pane="kumitate">組み立て</button>
   <button role="tab" aria-selected="false" data-pane="quiz">クイズ</button>
+  <button role="tab" aria-selected="false" data-pane="topik">TOPIK</button>
   <button role="tab" aria-selected="false" data-pane="fukushu">復習<span class="bdg" id="srsBdg" hidden></span></button>
   <button role="tab" aria-selected="false" data-pane="renshu">会話練習</button>
 </nav>
@@ -375,6 +418,30 @@ h2:first-child{margin-top:6px}
       <span>最高連続 <b id="qBest">0</b></span>
     </div>
     <div style="margin-top:14px"><button class="btn ghost" id="quizNext">次の問題 →</button></div>
+  </div>
+</section>
+
+<!-- ============ TOPIK ============ -->
+<section class="pane" id="pane-topik" hidden>
+  <div id="tkStart">
+    <p class="hint">TOPIK(韓国語能力試験)形式のオリジナル練習問題です。級を選んでスタートすると10問出題され、1問ごとに日本語の解説が付きます。聞き取り問題は音声だけを聞いて答えます。</p>
+    <div class="tk-groups">
+      <div class="tk-group"><div class="glbl">TOPIK I(初級)</div><div class="tk-levels" data-lvs="1,2"></div></div>
+      <div class="tk-group"><div class="glbl">TOPIK II(中級)</div><div class="tk-levels" data-lvs="3,4"></div></div>
+      <div class="tk-group"><div class="glbl">TOPIK II(上級)</div><div class="tk-levels" data-lvs="5,6"></div></div>
+    </div>
+    <div class="chips blue" id="tkCats"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="tkGo">スタート(10問)</button>
+      <button class="btn ghost" id="tkWrongGo" hidden>間違えた問題だけ復習</button>
+    </div>
+  </div>
+  <div id="tkPlay" hidden>
+    <div class="tk-card">
+      <div class="tk-top"><span id="tkInfo"></span><span id="tkScoreLine"></span></div>
+      <div id="tkBody"></div>
+    </div>
+    <div style="margin-top:10px"><button class="btn ghost" id="tkQuit">やめて級選択に戻る</button></div>
   </div>
 </section>
 
@@ -954,6 +1021,261 @@ function answer(btn, o, correct, feedbackAns){
 }
 document.getElementById("quizNext").addEventListener("click", newQuiz);
 newQuiz();
+
+/* ================= TOPIK練習 ================= */
+/* 各問題: lv=級, ty=種類, q=設問, c=選択肢(先頭が正解・表示時にシャッフル), ex=解説, au=聞き取り音声, ps=読解本文 */
+const TOPIK = [
+/* ---- 1級 ---- */
+{lv:1,ty:"語彙",q:"「물」の意味はどれ?",c:["水","火","木","服"],ex:"물(ムル)=水。물 주세요(お水ください)でおなじみの単語です。"},
+{lv:1,ty:"語彙",q:"「学校」を韓国語で言うと?",c:["학교","회사","병원","시장"],ex:"학교(ハッキョ)=学校。漢字語「學校」の韓国語読みです。회사=会社、병원=病院、시장=市場。"},
+{lv:1,ty:"語彙",q:"空欄に入るのは? 「아침에 커피를 ___.」",c:["마셔요","먹어요","자요","가요"],ex:"飲み物には 마시다(飲む)を使います。마셔요=飲みます。먹어요=食べます。"},
+{lv:1,ty:"文法",q:"空欄に入るのは? 「저___ 일본 사람입니다.」",c:["는","가","를","에"],ex:"「私は」の「は」にあたる主題の助詞は 은/는。저は母音で終わるので 는 を付けます。"},
+{lv:1,ty:"文法",q:"空欄に入るのは? 「책___ 읽어요.」",c:["을","이","는","에서"],ex:"目的語(〜を)には 을/를。책はパッチム(子音)で終わるので 을 です。"},
+{lv:1,ty:"文法",q:"空欄に入るのは? 「일요일___ 친구를 만나요.」",c:["에","를","가","도"],ex:"時を表す名詞には 에(〜に)を付けます。일요일에=日曜日に。"},
+{lv:1,ty:"聞",q:"音声の意味はどれ?",au:"안녕하세요. 만나서 반갑습니다.",c:["こんにちは。お会いできてうれしいです","さようなら。また明日","ありがとうございます","すみません、遅れました"],ex:"만나서 반갑습니다=お会いできてうれしいです。初対面のあいさつの定番です。"},
+{lv:1,ty:"聞",q:"この人は何をたずねていますか?",au:"이거 얼마예요?",c:["値段","場所","時間","名前"],ex:"얼마예요?=いくらですか。買い物の必須フレーズです。"},
+{lv:1,ty:"聞",q:"今、何時だと言っていますか?",au:"지금 세 시예요.",c:["3時","4時","2時","10時"],ex:"세 시=3時。時刻の「〜時」には固有数詞を使い、셋(3)は 세 に形が変わります。"},
+{lv:1,ty:"読",ps:"오늘은 제 생일입니다. 친구들과 케이크를 먹습니다.",q:"内容と合うものはどれ?",c:["今日は自分の誕生日だ","今日は試験がある","一人でケーキを食べる","友達の誕生日だ"],ex:"제 생일=私の誕生日。친구들과=友達と(複数)。"},
+{lv:1,ty:"読",ps:"영화관은 3층에 있습니다. 2층은 식당입니다.",q:"映画館は何階にありますか?",c:["3階","2階","1階","4階"],ex:"층=階。〜에 있습니다=〜にあります。"},
+/* ---- 2級 ---- */
+{lv:2,ty:"語彙",q:"「예매」の意味はどれ?",c:["(チケットの)前売り購入・予約","返品","割引","配達"],ex:"예매(予買)=チケットなどを前もって買うこと。영화표를 예매하다=映画のチケットを予約する。"},
+{lv:2,ty:"語彙",q:"空欄に入るのは? 「감기에 걸려서 병원에 ___.」",c:["갔어요","샀어요","입었어요","만났어요"],ex:"감기에 걸리다=風邪をひく。병원에 가다=病院に行く。過去形で 갔어요。"},
+{lv:2,ty:"語彙",q:"空欄に入るのは? 「이 옷은 ___ 비싸요. 못 사겠어요.」",c:["너무","별로","전혀","가끔"],ex:"너무 비싸요=高すぎます。별로・전혀は「〜ない」と一緒に使う副詞です。"},
+{lv:2,ty:"文法",q:"空欄に入るのは? 「어제 친구를 ___.」",c:["만났어요","만나요","만날 거예요","만나세요"],ex:"어제(昨日)なので過去形。만나다+았/었→만났어요。"},
+{lv:2,ty:"文法",q:"空欄に入るのは? 「한국에 ___ 싶어요.」",c:["가고","가서","가면","가지만"],ex:"〜고 싶다=〜したい。動詞の語幹+고 싶어요。가고 싶어요=行きたいです。"},
+{lv:2,ty:"文法",q:"空欄に入るのは? 「시간이 없어서 아침을 ___ 먹어요.」",c:["못","잘","꼭","더"],ex:"못+動詞=〜できない。時間がなくて朝ごはんを食べられない、という文です。"},
+{lv:2,ty:"聞",q:"質問への返事として適切なのは?",au:"주말에 뭐 할 거예요?",c:["등산을 갈 거예요(登山に行くつもりです)","네, 맛있어요(はい、おいしいです)","세 개 주세요(3つください)","어제 갔어요(昨日行きました)"],ex:"뭐 할 거예요?=何をするつもりですか(未来)。未来形 〜(으)ㄹ 거예요 で答えます。"},
+{lv:2,ty:"聞",q:"音声の内容と合うものは?",au:"죄송하지만, 조금 늦을 것 같아요.",c:["少し遅れそうだと謝っている","道をたずねている","予約を取り消している","値段を聞いている"],ex:"늦을 것 같아요=遅れそうです。〜(으)ㄹ 것 같다=〜しそうだ(推測)。"},
+{lv:2,ty:"聞",q:"音声の内容と合うものは?",au:"이 버스는 명동에 안 가요. 지하철을 타세요.",c:["このバスは明洞に行かない","このバスは明洞行きだ","地下鉄は動いていない","タクシーに乗るべきだ"],ex:"안 가요=行きません。〜을/를 타다=〜に乗る(助詞に注意)。"},
+{lv:2,ty:"読",ps:"수미 씨, 내일 회의는 오후 2시입니다. 회의실이 3층에서 5층으로 바뀌었습니다.",q:"内容と合うものはどれ?",c:["会議室が変更された","会議は午前中にある","会議は中止になった","会議は3時からだ"],ex:"바뀌다=変わる。3층에서 5층으로=3階から5階へ。"},
+{lv:2,ty:"読",ps:"이 약은 하루에 세 번, 식사 후에 드세요.",q:"薬の飲み方として正しいのは?",c:["1日3回・食後","1日3回・食前","1日2回・食後","寝る前だけ"],ex:"하루에 세 번=1日に3回。식사 후=食事の後。드세요=召し上がってください。"},
+/* ---- 3級 ---- */
+{lv:3,ty:"語彙",q:"空欄に入るのは? 「요즘 일이 많아서 스트레스를 많이 ___.」",c:["받아요","줘요","놓아요","보내요"],ex:"스트레스를 받다=ストレスを感じる。日本語の発想と違い「받다(受け取る)」を使います。"},
+{lv:3,ty:"語彙",q:"「환불」の意味はどれ?",c:["払い戻し","両替","送金","貯金"],ex:"환불(還払)=返金・払い戻し。환불해 주세요=返金してください。"},
+{lv:3,ty:"語彙",q:"空欄に入るのは? 「옷이 저한테 좀 커요. 한 치수 ___ 것으로 주세요.」",c:["작은","큰","비싼","긴"],ex:"服が大きい→ワンサイズ小さいものを。치수=サイズ。작다の連体形 작은。"},
+{lv:3,ty:"文法",q:"空欄に入るのは? 「비가 ___ 우산을 가져가세요.」",c:["오니까","와서","오지만","오거나"],ex:"後ろが命令文(〜세요)のときの理由は 〜(으)니까。〜아/어서は命令・勧誘と一緒に使えません。"},
+{lv:3,ty:"文法",q:"空欄に入るのは? 「한국 음식을 만들 줄 ___.」",c:["알아요","있어요","해요","돼요"],ex:"〜(으)ㄹ 줄 알다=〜のやり方を知っている(できる)。만들 줄 알아요=作れます。"},
+{lv:3,ty:"文法",q:"空欄に入るのは? 「동생은 지금 밥을 먹___ 있어요.」",c:["고","어","는","게"],ex:"〜고 있다=〜している(進行形)。먹고 있어요=食べています。"},
+{lv:3,ty:"聞",q:"音声の内容と合うものは?",au:"손님, 이 신발은 지금 세일 중이라서 이만 원만 내시면 됩니다.",c:["靴はセール中で2万ウォンだ","靴は売り切れている","靴は4万ウォンだ","セールは明日から始まる"],ex:"세일 중이라서=セール中なので。이만 원=2万ウォン。〜(으)면 되다=〜すればよい。"},
+{lv:3,ty:"聞",q:"これは何の音声ですか?",au:"내일부터 장마가 시작되겠습니다. 외출하실 때 우산을 꼭 챙기시기 바랍니다.",c:["天気予報","交通情報","店の広告","駅のアナウンス"],ex:"장마=梅雨。챙기다=(忘れずに)持っていく。〜기 바랍니다=〜するようお願いします。"},
+{lv:3,ty:"聞",q:"音声の内容と合うものは?",au:"여보세요, 지금 회의 중이라서 이따가 다시 전화할게요.",c:["後でかけ直すと言っている","今すぐ会いたいと言っている","電話番号をたずねている","会議を欠席すると言っている"],ex:"이따가=のちほど。〜(으)ㄹ게요=〜しますね(約束)。"},
+{lv:3,ty:"読",ps:"저는 작년부터 한국 드라마를 보면서 한국어를 공부하고 있습니다. 처음에는 자막 없이 하나도 못 알아들었지만, 요즘은 조금씩 들리기 시작했습니다.",q:"内容と合うものはどれ?",c:["最近少しずつ聞き取れるようになった","字幕なしで完璧に理解できる","勉強を始めたのは今年からだ","ドラマはもう見ていない"],ex:"알아듣다=聞き取って理解する。들리기 시작하다=聞こえ始める。"},
+{lv:3,ty:"読",ps:"도서관 이용 안내: 평일은 밤 10시까지, 주말은 저녁 6시까지 이용하실 수 있습니다. 매달 첫째 월요일은 휴관입니다.",q:"内容と合うものはどれ?",c:["毎月第1月曜日は休館だ","週末は夜10時まで開いている","平日は6時に閉まる","年中無休だ"],ex:"매달 첫째 월요일=毎月第1月曜日。휴관=休館。"},
+/* ---- 4級 ---- */
+{lv:4,ty:"語彙",q:"「눈코 뜰 새 없다」の意味はどれ?",c:["息つく暇もなく忙しい","とても悲しい","視力が悪い","眠くてたまらない"],ex:"直訳「目も鼻も開ける間がない」。慣用句で「非常に忙しい」の意味です。"},
+{lv:4,ty:"語彙",q:"空欄に入るのは? 「그 소식을 듣고 깜짝 ___.」",c:["놀랐어요","놀았어요","늘었어요","날았어요"],ex:"깜짝 놀라다=びっくりする。놀다(遊ぶ)・늘다(増える)・날다(飛ぶ)と形が似ているので注意。"},
+{lv:4,ty:"語彙",q:"「미루다」の意味はどれ?",c:["先延ばしにする","推薦する","滑る","信じる"],ex:"미루다=延期する・先延ばしにする。숙제를 미루다=宿題を後回しにする。"},
+{lv:4,ty:"文法",q:"空欄に入るのは? 「급하게 뛰어가다가 넘어질 ___.」",c:["뻔했어요","것 같아요","수 없어요","줄 알아요"],ex:"〜(으)ㄹ 뻔하다=危うく〜するところだった(実際にはしなかった)。"},
+{lv:4,ty:"文法",q:"空欄に入るのは? 「버스를 놓치는 ___ 회사에 지각했어요.」",c:["바람에","덕분에","대신에","김에"],ex:"〜는 바람에=〜したせいで(悪い結果の原因)。良い結果には 덕분에 を使います。"},
+{lv:4,ty:"文法",q:"空欄に入るのは? 「어렸을 때 자주 ___ 노래예요.」",c:["부르던","부르는","부를","불렀던 게"],ex:"〜던=過去によくしていたことを回想する連体形。자주 부르던 노래=よく歌っていた歌。"},
+{lv:4,ty:"聞",q:"話している人の状況として合うものは?",au:"오늘 모임에 못 갈 것 같아. 갑자기 회사에 일이 생겼거든. 정말 미안해. 다음에는 꼭 갈게.",c:["急な仕事で集まりに行けない","集まりの場所がわからない","もう会場に着いている","集まりを主催している"],ex:"일이 생기다=用事ができる。〜거든=〜なんだよ(理由の説明)。"},
+{lv:4,ty:"聞",q:"音声の内容と合うものは?",au:"이 제품은 고장이 나면 일 년 안에는 무료로 수리해 드립니다. 영수증을 꼭 보관해 주세요.",c:["1年以内なら無料で修理してもらえる","修理は常に有料だ","領収書は捨ててよい","返品はいつでもできる"],ex:"고장이 나다=故障する。수리하다=修理する。보관하다=保管する。"},
+{lv:4,ty:"聞",q:"話している人の様子として合うものは?",au:"요즘 운동을 시작했는데요, 처음에는 힘들었지만 이제는 운동을 안 하면 오히려 몸이 무거운 느낌이에요.",c:["運動が習慣になった","運動をやめてしまった","運動はまだつらいだけだ","これから運動を始める"],ex:"오히려=むしろ。運動しないとかえって体が重い=習慣化した、ということです。"},
+{lv:4,ty:"読",ps:"최근 혼자 사는 사람들이 늘면서 소포장 식품의 판매가 크게 증가하고 있다. 마트들도 1인 가구를 위한 코너를 앞다투어 만들고 있다.",q:"内容と合うものはどれ?",c:["一人暮らしの増加で小分け食品の販売が伸びている","小分け食品の販売は減っている","マートは1人世帯向けコーナーをなくしている","家族の人数が増えている"],ex:"1인 가구=単身世帯。앞다투어=先を争って。"},
+{lv:4,ty:"読",ps:"참가 신청은 이번 주 금요일까지이며, 정원이 차면 조기에 마감될 수 있습니다.",q:"内容と合うものはどれ?",c:["定員に達すれば早めに締め切られることがある","締め切りは来月だ","定員は設けられていない","申し込みは電話でのみ受け付ける"],ex:"정원이 차다=定員に達する。조기에 마감되다=早期に締め切られる。"},
+/* ---- 5級 ---- */
+{lv:5,ty:"語彙",q:"空欄に入るのは? 「새 정책은 소비를 ___하는 효과가 있을 것으로 기대된다.」",c:["촉진","단축","촉박","추방"],ex:"촉진하다=促進する。소비를 촉진하다=消費を促進する。단축=短縮、촉박하다=差し迫っている。"},
+{lv:5,ty:"語彙",q:"「막상」の意味に最も近いのは?",c:["いざ実際に(やってみると)","決して","たびたび","わざと"],ex:"막상 해 보니 어렵지 않았다=いざやってみたら難しくなかった。予想と実際のズレを表す副詞です。"},
+{lv:5,ty:"語彙",q:"空欄に入るのは? 「두 나라는 오랜 협상 끝에 합의에 ___.」",c:["이르렀다","일렀다","이루었다","일어났다"],ex:"합의에 이르다=合意に至る。이르다(至る)の過去形は 이르렀다(러変則)。이루다=成し遂げる。"},
+{lv:5,ty:"文法",q:"空欄に入るのは? 「노력하는 사람이 성공하기 ___.」",c:["마련이다","나름이다","망정이다","일쑤다"],ex:"〜기 마련이다=〜するものだ(当然の帰結)。努力する人は成功するものだ。"},
+{lv:5,ty:"文法",q:"空欄に入るのは? 「그는 아무 말도 하지 않은 ___ 방을 나가 버렸다.」",c:["채","척","줄","듯"],ex:"〜(으)ㄴ 채(로)=〜したまま。何も言わないまま部屋を出て行った。〜는 척=〜するふり。"},
+{lv:5,ty:"文法",q:"空欄に入るのは? 「회의가 길어짐___ 따라 결정도 늦어지고 있다.」",c:["에","을","으로","과"],ex:"〜(으)ㅁ에 따라=〜するのに伴って。動詞を名詞化(길어짐)して 에 따라 を続けます。"},
+{lv:5,ty:"聞",q:"音声の内容と合うものは?",au:"최근 온라인 중고 거래가 활발해지면서 관련 사기 피해도 함께 늘고 있습니다. 경찰은 직거래를 할 때 가급적 공공장소에서 만날 것을 당부했습니다.",c:["中古取引の詐欺被害が増えている","中古取引が法律で禁止された","警察が取引を直接仲介している","詐欺被害は減ってきている"],ex:"사기=詐欺。가급적=なるべく。당부하다=(強く)お願いする。"},
+{lv:5,ty:"聞",q:"音声の内容と合うものは?",au:"이번 전시회는 관람객의 요청에 힘입어 다음 달 말까지 연장 운영됩니다. 단, 마지막 주에는 야간 관람이 제공되지 않습니다.",c:["展示会は来月末まで延長される","展示会は今週で終わる","夜間観覧は毎日実施される","延長の予定はない"],ex:"〜에 힘입어=〜に後押しされて。연장 운영=延長営業。단=ただし。"},
+{lv:5,ty:"聞",q:"音声の内容と合うものは?",au:"물가가 계속 오르자 외식 대신 집에서 도시락을 싸서 다니는 직장인이 부쩍 늘었다고 합니다.",c:["弁当を持参する会社員が急に増えた","外食する人が増えた","物価が下がり続けている","会社の食堂が閉鎖された"],ex:"물가=物価。〜자=〜すると(すぐに)。부쩍=めっきり・ぐんと。"},
+{lv:5,ty:"読",ps:"칭찬은 아이의 행동을 바꾸는 강력한 도구지만, 결과만을 칭찬하면 아이는 실패를 두려워하게 된다. 전문가들은 결과보다 노력과 과정을 칭찬하라고 조언한다.",q:"筆者の考えと合うものはどれ?",c:["結果よりも努力や過程をほめるべきだ","ほめること自体をやめるべきだ","失敗は必ず叱るべきだ","結果だけをほめるのが最も効果的だ"],ex:"칭찬하다=ほめる。두려워하다=恐れる。과정=過程。"},
+{lv:5,ty:"読",ps:"재택근무의 확산은 통근 시간을 줄여 삶의 질을 높였다는 평가를 받는 한편, 일과 휴식의 경계를 흐리게 만들었다는 지적도 있다.",q:"内容と合うものはどれ?",c:["在宅勤務には肯定的な評価と否定的な指摘の両方がある","在宅勤務は誰にとっても完璧な制度だ","在宅勤務で通勤時間が増えた","在宅勤務はもう行われていない"],ex:"〜는 한편=〜する一方で。경계를 흐리다=境界を曖昧にする。"},
+/* ---- 6級 ---- */
+{lv:6,ty:"語彙",q:"「타산지석(他山之石)」の使い方として適切なのは?",c:["他人の失敗を自分の教訓とする","他人の成功をねたむ","登山を趣味にする","石のように黙り込む"],ex:"他山の石。남의 잘못을 타산지석으로 삼다=他人の過ちを自分の教訓にする。"},
+{lv:6,ty:"語彙",q:"空欄に入るのは? 「그의 주장은 구체적인 근거가 없어 설득력이 ___.」",c:["떨어진다","넘어진다","무너진다","쓰러진다"],ex:"설득력이 떨어지다=説得力に欠ける。떨어지다は「落ちる」以外に「(質・力が)劣る」の意味があります。"},
+{lv:6,ty:"語彙",q:"「어불성설」の意味はどれ?",c:["理屈がまったく通らない話","立派な演説","口が達者なこと","無言の抗議"],ex:"語不成説=言葉が説を成さない。도저히 말이 안 되는 이야기のことです。"},
+{lv:6,ty:"文法",q:"空欄に入るのは? 「굶어 죽을___ 남의 것을 훔치지는 않겠다.」",c:["지언정","망정","뿐더러","테니"],ex:"〜(으)ㄹ지언정=たとえ〜しようとも。極端な状況を仮定して意志を強調します。"},
+{lv:6,ty:"文法",q:"空欄に入るのは? 「그렇게 준비 없이 시작했다가는 실패하기 ___.」",c:["십상이다","나름이다","그지없다","짝이 없다"],ex:"〜기 십상이다=〜するのがおちだ・〜しがちだ。〜았/었다가는=〜したら(悪い結果の予想)。"},
+{lv:6,ty:"文法",q:"空欄に入るのは? 「성적이 오르지 않는 것은 공부 방법이 잘못된 데___ 원인이 있다.」",c:["에","를","와","도"],ex:"〜(으)ㄴ 데에 원인이 있다=〜したことに原因がある。데=こと・ところ(依存名詞)。"},
+{lv:6,ty:"聞",q:"音声の内容と合うものは?",au:"인공지능 기술이 빠르게 발전하면서 이를 둘러싼 윤리적 논의도 활발해지고 있습니다. 전문가들은 기술 개발 못지않게 사회적 합의가 중요하다고 입을 모읍니다.",c:["技術開発に劣らず社会的合意が重要だ","AIの発展は止まってしまった","倫理的な議論は不要だ","専門家の意見は真っ二つに割れている"],ex:"못지않게=劣らず。입을 모으다=口をそろえる(意見が一致する)。"},
+{lv:6,ty:"聞",q:"音声の内容と合うものは?",au:"이 지역은 한때 공장 지대였으나 재개발을 거쳐 지금은 젊은 예술가들이 모여드는 문화 공간으로 탈바꿈했습니다.",c:["工場地帯が文化空間へと生まれ変わった","今も工場が稼働している","再開発は失敗に終わった","芸術家たちが去っていった"],ex:"한때=かつて。〜을/를 거쳐=〜を経て。탈바꿈하다=様変わりする。"},
+{lv:6,ty:"聞",q:"音声の内容と合うものは?",au:"독서량이 줄었다고는 하지만, 전자책과 오디오북까지 포함하면 이야기가 달라집니다. 매체가 바뀌었을 뿐 이야기를 즐기려는 욕구는 여전하다는 분석입니다.",c:["媒体が変わっただけで物語を楽しむ欲求は健在だ","人々は物語への興味を失った","電子書籍は統計に含めるべきでない","紙の本の読書量が増えた"],ex:"〜다고는 하지만=〜とは言うものの。여전하다=相変わらずだ。"},
+{lv:6,ty:"読",ps:"세계화가 진전될수록 오히려 지역 고유의 문화가 경쟁력이 된다는 역설이 주목받고 있다. 어디서나 볼 수 있는 것이 아니라, 그곳에서만 경험할 수 있는 것이 사람들을 움직이기 때문이다.",q:"筆者の主張として合うものはどれ?",c:["グローバル化の時代こそ地域固有の文化が競争力になる","地域文化は早晩消えていくべきだ","世界はどこも同じであるべきだ","旅行の意味はもはや失われた"],ex:"역설=逆説。〜(으)ㄹ수록=〜するほど。고유=固有。"},
+{lv:6,ty:"読",ps:"기술의 발전이 일자리를 없앤다는 우려는 어제오늘의 일이 아니다. 그러나 역사적으로 보면 기술은 일자리를 없애기보다 그 성격을 바꾸어 왔다. 문제는 변화의 속도에 제도가 따라가지 못할 때 발생한다.",q:"筆者の考えと合うものはどれ?",c:["技術は雇用をなくすというよりその性格を変えてきた","技術は常に雇用を減らしてきた","制度は常に変化より速く動く","技術の発展は止めるべきだ"],ex:"일자리=働き口・雇用。어제오늘의 일이 아니다=今に始まったことではない。"},
+];
+
+const TK_CATS = ["すべて","語彙","文法","聞き取り","読解"];
+const TK_TY_LABEL = {"語彙":"語彙","文法":"文法","聞":"聞き取り","読":"読解"};
+let tkLv = 1, tkCat = "すべて";
+let tkSet = [], tkIdx = 0, tkScore = 0, tkAnswered = false, tkSessionWrong = [];
+let tkStats = {}, tkWrong = [];
+try{ tkStats = JSON.parse(localStorage.getItem("hj.tk.stats")||"{}"); }catch(e){}
+try{ tkWrong = JSON.parse(localStorage.getItem("hj.tk.wrong")||"[]"); }catch(e){}
+function tkSave(){
+  try{
+    localStorage.setItem("hj.tk.stats", JSON.stringify(tkStats));
+    localStorage.setItem("hj.tk.wrong", JSON.stringify(tkWrong));
+  }catch(e){}
+}
+function tkEsc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function tkShuffle(a){ const x=[...a]; for(let i=x.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [x[i],x[j]]=[x[j],x[i]]; } return x; }
+function tkRenderLevels(){
+  document.querySelectorAll(".tk-levels").forEach(box=>{
+    box.innerHTML = "";
+    box.dataset.lvs.split(",").forEach(lvs=>{
+      const lv = parseInt(lvs,10);
+      const st = tkStats[lv];
+      const rate = st && st.s ? Math.round(st.c/st.s*100)+"%(正答率)" : "未挑戦";
+      const b = document.createElement("button");
+      b.innerHTML = lv+"級<span class='rate'>"+rate+"</span>";
+      b.setAttribute("aria-pressed", lv===tkLv);
+      b.addEventListener("click",()=>{
+        tkLv = lv;
+        document.querySelectorAll(".tk-levels button").forEach(x=>x.setAttribute("aria-pressed","false"));
+        b.setAttribute("aria-pressed","true");
+      });
+      box.appendChild(b);
+    });
+  });
+  document.getElementById("tkWrongGo").hidden = tkWrong.length===0;
+  document.getElementById("tkWrongGo").textContent = "間違えた問題だけ復習("+tkWrong.length+"問)";
+}
+const tkCatsEl = document.getElementById("tkCats");
+TK_CATS.forEach(c=>{
+  const b = document.createElement("button");
+  b.textContent = c;
+  b.setAttribute("aria-pressed", c===tkCat);
+  b.addEventListener("click",()=>{
+    tkCat = c;
+    tkCatsEl.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x.textContent===c));
+  });
+  tkCatsEl.appendChild(b);
+});
+function tkMatchCat(q){
+  if(tkCat==="すべて") return true;
+  return TK_TY_LABEL[q.ty]===tkCat;
+}
+function tkStart(wrongMode){
+  let pool;
+  if(wrongMode){
+    pool = tkWrong.filter(i=>TOPIK[i]);
+  } else {
+    pool = TOPIK.map((q,i)=>tkMatchCat(q)&&q.lv===tkLv ? i : -1).filter(i=>i>=0);
+  }
+  if(!pool.length) return;
+  tkSet = tkShuffle(pool).slice(0,10);
+  tkIdx = 0; tkScore = 0; tkSessionWrong = [];
+  document.getElementById("tkStart").hidden = true;
+  document.getElementById("tkPlay").hidden = false;
+  tkRenderQ();
+}
+function tkRenderQ(){
+  tkAnswered = false;
+  const qi = tkSet[tkIdx], q = TOPIK[qi];
+  document.getElementById("tkInfo").innerHTML =
+    "<span class='tk-badge'>"+q.lv+"級・"+TK_TY_LABEL[q.ty]+"</span> 第"+(tkIdx+1)+"問 / "+tkSet.length;
+  document.getElementById("tkScoreLine").textContent = "正解 "+tkScore;
+  const body = document.getElementById("tkBody");
+  body.innerHTML = "";
+  if(q.ps){
+    const p = document.createElement("div");
+    p.className = "tk-passage kr"; p.textContent = q.ps;
+    body.appendChild(p);
+  }
+  if(q.au){
+    const l = document.createElement("div");
+    l.className = "tk-listen";
+    const b = document.createElement("button");
+    b.textContent = "🔊 音声を聞く";
+    b.addEventListener("click",()=>speak(q.au, q.lv<=2?0.75:0.85));
+    l.appendChild(b);
+    body.appendChild(l);
+    speak(q.au, q.lv<=2?0.75:0.85);
+  }
+  const qEl = document.createElement("div");
+  qEl.className = "tk-q"+(/[가-힣]/.test(q.q)?" kr":"");
+  qEl.textContent = q.q;
+  body.appendChild(qEl);
+  const box = document.createElement("div");
+  box.className = "tk-choices";
+  const correct = q.c[0];
+  tkShuffle(q.c).forEach(opt=>{
+    const b = document.createElement("button");
+    if(/[가-힣]/.test(opt)) b.classList.add("kr");
+    b.textContent = opt;
+    b.addEventListener("click",()=>tkAnswer(b, opt, correct, qi, box));
+    box.appendChild(b);
+  });
+  body.appendChild(box);
+}
+function tkAnswer(btn, opt, correct, qi, box){
+  if(tkAnswered) return;
+  tkAnswered = true;
+  const q = TOPIK[qi];
+  const ok = opt===correct;
+  if(ok){ tkScore++; btn.classList.add("hit"); }
+  else {
+    btn.classList.add("miss");
+    [...box.children].forEach(b=>{ if(b.textContent===correct) b.classList.add("hit"); });
+    if(!tkSessionWrong.includes(qi)) tkSessionWrong.push(qi);
+  }
+  const st = tkStats[q.lv] || {s:0,c:0};
+  st.s++; if(ok) st.c++;
+  tkStats[q.lv] = st;
+  if(ok) tkWrong = tkWrong.filter(i=>i!==qi);
+  else if(!tkWrong.includes(qi)) tkWrong.push(qi);
+  tkSave();
+  document.getElementById("tkScoreLine").textContent = "正解 "+tkScore;
+  const ex = document.createElement("div");
+  ex.className = "tk-ex";
+  let html = ok ? "⭕ <b>正解!</b>" : "❌ 正解は「"+tkEsc(correct)+"」";
+  if(q.au) html += "<br>🎧 スクリプト: <span class='kr'>"+tkEsc(q.au)+"</span>";
+  if(q.ex) html += "<br>💡 "+tkEsc(q.ex);
+  ex.innerHTML = html;
+  document.getElementById("tkBody").appendChild(ex);
+  const nx = document.createElement("div");
+  nx.style.cssText = "margin-top:10px;text-align:center";
+  const nb = document.createElement("button");
+  nb.className = "btn";
+  nb.textContent = tkIdx+1 < tkSet.length ? "次の問題 →" : "結果を見る";
+  nb.addEventListener("click",()=>{
+    tkIdx++;
+    if(tkIdx < tkSet.length) tkRenderQ(); else tkResult();
+  });
+  nx.appendChild(nb);
+  document.getElementById("tkBody").appendChild(nx);
+}
+function tkResult(){
+  const n = tkSet.length, rate = Math.round(tkScore/n*100);
+  const msg = rate>=90 ? "🎉 素晴らしい!この級は合格圏です!" :
+              rate>=70 ? "💪 いい調子!あと少しで合格圏です。" :
+              "📚 解説を読み直して、もう一周してみましょう。";
+  document.getElementById("tkInfo").innerHTML = "<span class='tk-badge'>結果</span>";
+  document.getElementById("tkScoreLine").textContent = "";
+  const body = document.getElementById("tkBody");
+  let wrongHtml = "";
+  if(tkSessionWrong.length){
+    wrongHtml = "<div class='tk-wrong'><b>今回間違えた問題:</b>"+
+      tkSessionWrong.map(i=>{
+        const q = TOPIK[i];
+        return "<div class='w'>"+tkEsc(q.q)+"<br>→ <b class='kr'>"+tkEsc(q.c[0])+"</b></div>";
+      }).join("")+"</div>";
+  }
+  body.innerHTML =
+    "<div class='tk-result'><div class='big'>"+tkScore+" / "+n+"</div>"+
+    "<div class='msg'>"+msg+"</div>"+
+    "<div style='display:flex;gap:8px;justify-content:center;flex-wrap:wrap'>"+
+    "<button class='btn' id='tkAgain'>もう一度(同じ条件)</button>"+
+    "<button class='btn ghost' id='tkBack'>級選択に戻る</button></div>"+
+    wrongHtml+"</div>";
+  document.getElementById("tkAgain").addEventListener("click",()=>tkStart(false));
+  document.getElementById("tkBack").addEventListener("click", tkExit);
+}
+function tkExit(){
+  document.getElementById("tkPlay").hidden = true;
+  document.getElementById("tkStart").hidden = false;
+  tkRenderLevels();
+}
+document.getElementById("tkGo").addEventListener("click",()=>tkStart(false));
+document.getElementById("tkWrongGo").addEventListener("click",()=>tkStart(true));
+document.getElementById("tkQuit").addEventListener("click", tkExit);
+tkRenderLevels();
+
 
 /* ================= 復習(SRS) ================= */
 const DAY = 86400000;
