@@ -2685,24 +2685,36 @@ function aiEngineUi(){
 aiEngineUi();
 function gemErrJa(e){
   const m = String((e && (e.message || e.code)) || e);
+  const detail = "<br><span style='opacity:.7;font-size:11px'>詳細: "+esc(m).slice(0,300)+"</span>";
   if(m.indexOf("login-required")>=0) return "ログインが必要です。ホーム→「👤 アカウント」からログインしてください。";
-  if(m.indexOf("RESOURCE_EXHAUSTED")>=0 || m.indexOf("429")>=0 || m.toLowerCase().indexOf("quota")>=0) return "無料枠の本日分を使い切りました。時間をおいて(または明日)お試しください。";
-  if(m.indexOf("404")>=0 || m.toLowerCase().indexOf("not found")>=0 || m.indexOf("PERMISSION_DENIED")>=0 || m.indexOf("403")>=0) return "Firebase側でAI Logicが未設定の可能性があります(コンソール→構築→AI Logic→「開始」→ Gemini Developer API を選択)。";
-  if(m.toLowerCase().indexOf("fetch")>=0 || m.toLowerCase().indexOf("network")>=0) return "ネットワークエラーです。接続を確認してください。";
-  return esc(m);
+  if(m.indexOf("sdk-load-failed")>=0) return "AI用プログラムの読み込みに失敗しました。通信環境と、広告ブロッカーが gstatic.com を止めていないか確認してください。"+detail;
+  if(m.indexOf("RESOURCE_EXHAUSTED")>=0 || m.indexOf("429")>=0 || m.toLowerCase().indexOf("quota")>=0) return "無料枠の本日分を使い切りました。時間をおいて(または明日)お試しください。"+detail;
+  if(m.indexOf("404")>=0 || m.toLowerCase().indexOf("not found")>=0 || m.indexOf("PERMISSION_DENIED")>=0 || m.indexOf("403")>=0 || m.toLowerCase().indexOf("not enabled")>=0) return "Firebase側でAI Logicが未設定の可能性があります。コンソール→構築→AI Logic→「開始」→「Gemini Developer API」を有効化してください。"+detail;
+  if(m.toLowerCase().indexOf("fetch")>=0 || m.toLowerCase().indexOf("network")>=0) return "AIサーバーに接続できませんでした。AI Logicの有効化がまだの場合はコンソール→構築→AI Logic→「開始」を実行してください。広告ブロッカーが googleapis.com を止めている場合も同様のエラーになります。"+detail;
+  return esc(m).slice(0,300);
+}
+async function gemImport(){
+  const vers = ["12.19.0", "12.9.0", "12.0.0", "11.10.0"];
+  let lastErr = null;
+  for(const ver of vers){
+    try{
+      const appMod = await import("https://www.gstatic.com/firebasejs/"+ver+"/firebase-app.js");
+      const aiMod = await import("https://www.gstatic.com/firebasejs/"+ver+"/firebase-ai.js");
+      return {appMod, aiMod};
+    }catch(e){ lastErr = e; }
+  }
+  throw new Error("sdk-load-failed: "+String((lastErr && lastErr.message) || lastErr));
 }
 async function gemEnsure(){
   if(gemModel) return gemModel;
   const cfg = fbGetConfig();
   if(!cfg) throw new Error("Firebaseの設定がありません。");
-  const ver = "12.0.0";
-  const appMod = await import("https://www.gstatic.com/firebasejs/"+ver+"/firebase-app.js");
-  const aiMod = await import("https://www.gstatic.com/firebasejs/"+ver+"/firebase-ai.js");
+  const mods = await gemImport();
   let app;
-  try{ app = appMod.initializeApp(cfg, "aiApp"); }
-  catch(e){ app = appMod.getApp("aiApp"); }
-  const ai = aiMod.getAI(app, { backend: new aiMod.GoogleAIBackend() });
-  gemModel = aiMod.getGenerativeModel(ai, { model: "gemini-2.5-flash", systemInstruction: AI_SYS });
+  try{ app = mods.appMod.initializeApp(cfg, "aiApp"); }
+  catch(e){ app = mods.appMod.getApp("aiApp"); }
+  const ai = mods.aiMod.getAI(app, { backend: new mods.aiMod.GoogleAIBackend() });
+  gemModel = mods.aiMod.getGenerativeModel(ai, { model: "gemini-2.5-flash", systemInstruction: AI_SYS });
   return gemModel;
 }
 
