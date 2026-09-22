@@ -2578,11 +2578,27 @@ async function aiSendMsg(text){
   if(aiEngine === "cloud"){
     try{
       if(!window.hjUser) throw new Error("login-required");
-      const model = await gemEnsure();
       gemHist.push({role:"user", parts:[{text:t}]});
       if(gemHist.length > 24) gemHist.splice(0, gemHist.length - 24);
-      const res = await model.generateContent({contents: gemHist});
-      const content = ((res.response && res.response.text()) || "").trim() || "(応答が空でした)";
+      let content = null, lastErr = null;
+      for(let att = 0; att < GEM_MODELS.length; att++){
+        try{
+          const model = await gemEnsure();
+          const res = await model.generateContent({contents: gemHist});
+          content = ((res.response && res.response.text()) || "").trim() || "(応答が空でした)";
+          break;
+        }catch(e){
+          lastErr = e;
+          const em = String((e && e.message) || e).toLowerCase();
+          if((em.indexOf("404") >= 0 || em.indexOf("no longer available") >= 0 || em.indexOf("not found") >= 0) && gemModelIdx < GEM_MODELS.length - 1){
+            gemModelIdx++;
+            gemModel = null;
+            continue;
+          }
+          throw e;
+        }
+      }
+      if(content === null) throw (lastErr || new Error("failed"));
       typing.remove();
       aiBubble("bot","<span class='k kr'>"+esc(content).replace(/\n/g,"<br>")+"</span>");
       gemHist.push({role:"model", parts:[{text: content}]});
@@ -2693,6 +2709,8 @@ function gemErrJa(e){
   if(m.toLowerCase().indexOf("fetch")>=0 || m.toLowerCase().indexOf("network")>=0) return "AIサーバーに接続できませんでした。AI Logicの有効化がまだの場合はコンソール→構築→AI Logic→「開始」を実行してください。広告ブロッカーが googleapis.com を止めている場合も同様のエラーになります。"+detail;
   return esc(m).slice(0,300);
 }
+const GEM_MODELS = ["gemini-3.6-flash", "gemini-3.6-flash-lite", "gemini-2.5-flash"];
+let gemModelIdx = 0;
 async function gemImport(){
   const vers = ["12.19.0", "12.9.0", "12.0.0", "11.10.0"];
   let lastErr = null;
@@ -2714,7 +2732,7 @@ async function gemEnsure(){
   try{ app = mods.appMod.initializeApp(cfg, "aiApp"); }
   catch(e){ app = mods.appMod.getApp("aiApp"); }
   const ai = mods.aiMod.getAI(app, { backend: new mods.aiMod.GoogleAIBackend() });
-  gemModel = mods.aiMod.getGenerativeModel(ai, { model: "gemini-2.5-flash", systemInstruction: AI_SYS });
+  gemModel = mods.aiMod.getGenerativeModel(ai, { model: GEM_MODELS[gemModelIdx], systemInstruction: AI_SYS });
   return gemModel;
 }
 
