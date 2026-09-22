@@ -374,6 +374,8 @@ h2:first-child{margin-top:6px}
 .bub.sp2{background:var(--red-soft)}
 .bub.playing{outline:2px solid var(--mustard)}
 .dlg-ctrl{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);flex-wrap:wrap;justify-content:center}
+.bub-spk{border:0;background:transparent;cursor:pointer;font-size:11.5px;font-weight:700;font-family:inherit;color:inherit;padding:3px 0 0;display:block;opacity:.75;text-align:left}
+.bub-spk:hover{opacity:1}
 
 @media (max-width:430px){
   #homeStats{grid-template-columns:repeat(2,1fr)}
@@ -889,6 +891,17 @@ function pickVoice(){
 if(ttsOk){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 else document.getElementById("ttsNote").style.display="block";
 
+let ttsWarmed = false;
+function ttsWarmup(){
+  if(ttsWarmed || !ttsOk) return;
+  try{
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    speechSynthesis.speak(u);
+    ttsWarmed = true;
+  }catch(e){}
+}
+["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev, ttsWarmup, {capture:true}));
 function speak(text, rate){
   if(!ttsOk) return;
   try{
@@ -2533,6 +2546,18 @@ function aiBubble(cls, html){
   aiLog.scrollTop = aiLog.scrollHeight;
   return d;
 }
+function aiBotBubble(content){
+  const d = aiBubble("bot","<span class='k kr'>"+esc(content).replace(/\n/g,"<br>")+"</span>");
+  const b = document.createElement("button");
+  b.className = "bub-spk";
+  b.textContent = "🔊 もう一度聞く";
+  b.addEventListener("click",()=>{
+    const kr = content.split("\n").filter(l=>/[가-힣]/.test(l) && !/^\(/.test(l.trim())).join(" ") || content;
+    speak(kr, 0.8);
+  });
+  d.appendChild(b);
+  return d;
+}
 function aiSpeakKr(text){
   const kr = text.split("\n").filter(l=>/[가-힣]/.test(l) && !/^\(/.test(l.trim())).join(" ");
   if(kr) speak(kr, 0.8);
@@ -2600,7 +2625,7 @@ async function aiSendMsg(text){
       }
       if(content === null) throw (lastErr || new Error("failed"));
       typing.remove();
-      aiBubble("bot","<span class='k kr'>"+esc(content).replace(/\n/g,"<br>")+"</span>");
+      aiBotBubble(content);
       gemHist.push({role:"model", parts:[{text: content}]});
       aiSpeakKr(content);
     }catch(e){
@@ -2631,7 +2656,7 @@ async function aiSendMsg(text){
     const data = await res.json();
     const content = ((data.message && data.message.content) || "").trim() || "(応答が空でした)";
     typing.remove();
-    aiBubble("bot","<span class='k kr'>"+esc(content).replace(/\n/g,"<br>")+"</span>");
+    aiBotBubble(content);
     aiMsgs.push({role:"assistant", content});
     if(aiMsgs.length > 24) aiMsgs.splice(1, aiMsgs.length-24);
     aiSpeakKr(content);
