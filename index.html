@@ -593,9 +593,11 @@ h2:first-child{margin-top:6px}
   </div>
   <div id="aiArea" hidden>
     <div class="aiinfo" id="aiSetup" style="margin-bottom:10px">
-      <b>🤖 ローカルAIフリートーク(Ollama)</b>
-      <div class="hint" style="margin:4px 0 0">無料のローカルAI(Ollama)と韓国語で自由会話。会話はあなたのPCの中だけで完結し、料金もかかりません。初回はREADMEの手順でOllamaを準備してください。</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <b>🤖 AIフリートーク</b>
+      <div class="chips blue" id="aiEngines" style="margin:8px 0 0"></div>
+      <p class="hint" id="aiCloudInfo" style="margin:8px 0 0" hidden></p>
+      <div class="hint" id="aiLocalHint" style="margin:4px 0 0">無料のローカルAI(Ollama)と韓国語で自由会話。会話はあなたのPCの中だけで完結し、料金もかかりません。初回はREADMEの手順でOllamaを準備してください。</div>
+      <div id="aiOllamaRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <input id="aiUrl" value="http://localhost:11434" aria-label="OllamaのURL"
           style="flex:2;min-width:180px;font:inherit;font-size:13px;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--bg);color:var(--ink)">
         <input id="aiModel" value="exaone3.5:2.4b" aria-label="モデル名"
@@ -2564,16 +2566,36 @@ window.hjAiInit = function(){
     aiBubble("bot","<span class='k kr'>"+greet+"</span><span class='s'>"+greetSub+"</span>");
     aiMsgs.push({role:"assistant", content:greet});
   }
-  aiCheckConn();
+  if(aiEngine === "local") aiCheckConn(); else if(window.aiEngineUi) aiEngineUi();
 };
 async function aiSendMsg(text){
   const t = (text||"").trim();
   if(!t || aiBusy) return;
   aiBubble("user","<span class='k kr'>"+esc(t)+"</span>");
   document.getElementById("aiInput").value = "";
-  aiMsgs.push({role:"user", content:t});
   aiBusy = true;
   const typing = aiBubble("bot","<span class='s'>考え中…</span>");
+  if(aiEngine === "cloud"){
+    try{
+      if(!window.hjUser) throw new Error("login-required");
+      const model = await gemEnsure();
+      gemHist.push({role:"user", parts:[{text:t}]});
+      if(gemHist.length > 24) gemHist.splice(0, gemHist.length - 24);
+      const res = await model.generateContent({contents: gemHist});
+      const content = ((res.response && res.response.text()) || "").trim() || "(応答が空でした)";
+      typing.remove();
+      aiBubble("bot","<span class='k kr'>"+esc(content).replace(/\n/g,"<br>")+"</span>");
+      gemHist.push({role:"model", parts:[{text: content}]});
+      aiSpeakKr(content);
+    }catch(e){
+      typing.remove();
+      if(gemHist.length && gemHist[gemHist.length-1].role === "user") gemHist.pop();
+      aiBubble("sys","☁️ オンラインAIエラー: "+gemErrJa(e));
+    }
+    aiBusy = false;
+    return;
+  }
+  aiMsgs.push({role:"user", content:t});
   try{
     const res = await fetch(aiBase()+"/api/chat", {
       method:"POST",
@@ -2628,6 +2650,61 @@ aiMic.addEventListener("click",()=>{
   });
 });
 if(!SR) aiMic.disabled = true;
+
+/* ---- オンラインAI(Gemini via Firebase AI Logic・会員専用) ---- */
+const AI_ENGINES = [
+ {id:"cloud", label:"☁️ オンラインAI(会員専用)"},
+ {id:"local", label:"💻 ローカル(Ollama)"},
+];
+let aiEngine = "cloud";
+let gemModel = null, gemHist = [];
+const aiEngEl = document.getElementById("aiEngines");
+AI_ENGINES.forEach(m=>{
+  const b = document.createElement("button");
+  b.textContent = m.label;
+  b.setAttribute("aria-pressed", m.id===aiEngine);
+  b.addEventListener("click",()=>{
+    aiEngine = m.id;
+    aiEngEl.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", AI_ENGINES[i].id===aiEngine));
+    aiEngineUi();
+    if(aiEngine === "local") aiCheckConn();
+  });
+  aiEngEl.appendChild(b);
+});
+function aiEngineUi(){
+  const local = aiEngine === "local";
+  document.getElementById("aiOllamaRow").hidden = !local;
+  document.getElementById("aiStatus").hidden = !local;
+  document.getElementById("aiLocalHint").hidden = !local;
+  const ci = document.getElementById("aiCloudInfo");
+  ci.hidden = local;
+  ci.innerHTML = window.hjUser
+    ? "✅ ログイン済みです。そのまま韓国語(日本語でもOK)で話しかけてください。クラウドAI(Google Gemini)が無料枠で応答します。"
+    : "⚠️ オンラインAIは会員専用です。ホーム→「👤 アカウント」でログインすると使えます(登録無料)。";
+}
+aiEngineUi();
+function gemErrJa(e){
+  const m = String((e && (e.message || e.code)) || e);
+  if(m.indexOf("login-required")>=0) return "ログインが必要です。ホーム→「👤 アカウント」からログインしてください。";
+  if(m.indexOf("RESOURCE_EXHAUSTED")>=0 || m.indexOf("429")>=0 || m.toLowerCase().indexOf("quota")>=0) return "無料枠の本日分を使い切りました。時間をおいて(または明日)お試しください。";
+  if(m.indexOf("404")>=0 || m.toLowerCase().indexOf("not found")>=0 || m.indexOf("PERMISSION_DENIED")>=0 || m.indexOf("403")>=0) return "Firebase側でAI Logicが未設定の可能性があります(コンソール→構築→AI Logic→「開始」→ Gemini Developer API を選択)。";
+  if(m.toLowerCase().indexOf("fetch")>=0 || m.toLowerCase().indexOf("network")>=0) return "ネットワークエラーです。接続を確認してください。";
+  return esc(m);
+}
+async function gemEnsure(){
+  if(gemModel) return gemModel;
+  const cfg = fbGetConfig();
+  if(!cfg) throw new Error("Firebaseの設定がありません。");
+  const ver = "12.0.0";
+  const appMod = await import("https://www.gstatic.com/firebasejs/"+ver+"/firebase-app.js");
+  const aiMod = await import("https://www.gstatic.com/firebasejs/"+ver+"/firebase-ai.js");
+  let app;
+  try{ app = appMod.initializeApp(cfg, "aiApp"); }
+  catch(e){ app = appMod.getApp("aiApp"); }
+  const ai = aiMod.getAI(app, { backend: new aiMod.GoogleAIBackend() });
+  gemModel = aiMod.getGenerativeModel(ai, { model: "gemini-2.5-flash", systemInstruction: AI_SYS });
+  return gemModel;
+}
 
 /* PWA: サービスワーカー登録(file://直開きでは無効) */
 if("serviceWorker" in navigator && location.protocol !== "file:"){
@@ -3090,6 +3167,7 @@ async function fbInit(){
   fbMsg("");
   firebase.auth().onAuthStateChanged(u=>{
     fbUser = u;
+    window.hjUser = u;
     fbRenderAuth();
     if(u) fbAfterLogin();
     else if(fbTimer){ clearInterval(fbTimer); fbTimer = null; }
@@ -3099,6 +3177,7 @@ function fbRenderAuth(){
   document.getElementById("acAuth").hidden = !!fbUser || !fbGetConfig();
   document.getElementById("acIn").hidden = !fbUser;
   if(fbUser) document.getElementById("acWho").innerHTML = "✅ <b>"+tkEsc(fbUser.email)+"</b> でログイン中";
+  if(window.aiEngineUi) aiEngineUi();
 }
 function fbErrJa(e){
   const c = (e && e.code) || "";
