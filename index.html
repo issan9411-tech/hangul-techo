@@ -3033,7 +3033,14 @@ document.getElementById("bkLoad").addEventListener("click",()=>{
 
 /* ================= アカウント(Firebaseクラウド同期) ================= */
 /* FB_BUILTIN_CONFIG に firebaseConfig を埋め込むと、全端末で設定貼り付けが不要になります */
-const FB_BUILTIN_CONFIG = null;
+const FB_BUILTIN_CONFIG = {
+  apiKey: "AIzaSyBtvnINcmsF1GPoNa49yPaRkNMNMI4xk9E",
+  authDomain: "hangul-techo.firebaseapp.com",
+  projectId: "hangul-techo",
+  storageBucket: "hangul-techo.firebasestorage.app",
+  messagingSenderId: "757854989887",
+  appId: "1:757854989887:web:08f08b023dc8cb7dfd128a"
+};
 function fbGetConfig(){
   if(FB_BUILTIN_CONFIG) return FB_BUILTIN_CONFIG;
   try{ const s = localStorage.getItem("hj.fbcfg"); if(s) return JSON.parse(s); }catch(e){}
