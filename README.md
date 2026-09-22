@@ -73,3 +73,30 @@ AIは「短い韓国語1文+カタカナ読み+日本語訳」の形式で返し
 | `manifest.webmanifest` | PWAマニフェスト |
 | `sw.js` | サービスワーカー(オフラインキャッシュ) |
 | `icon.svg` | アプリアイコン |
+
+## アカウント同期(Firebase)のセットアップ
+
+無料のFirebase(Google)を使って、ログインと学習記録のクラウド同期ができます。初回のみ約10分の設定が必要です。
+
+1. https://console.firebase.google.com を開き、Googleアカウントでログイン →「プロジェクトを作成」(名前は自由。Googleアナリティクスは無効でOK)
+2. 左メニュー「構築」→「Authentication」→「始める」→ ログイン方法で「**メール / パスワード**」を有効にして保存
+3. 「構築」→「**Firestore Database**」→「データベースを作成」→ 本番環境モード → ロケーションは `asia-northeast1`(東京)推奨
+4. Firestoreの「**ルール**」タブを開き、以下に置き換えて「公開」:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{uid} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+       }
+     }
+   }
+   ```
+
+5. プロジェクトの設定(⚙)→「マイアプリ」→ ウェブ(`</>`)でアプリを追加 → 表示される `firebaseConfig = { apiKey: ... }` の `{ ... }` 部分をコピー
+6. アプリのホーム →「👤 アカウント」→ 設定欄に貼り付けて「設定を保存」→ メールアドレスとパスワードで新規登録
+
+これでログイン中は学習記録が自動的にクラウドへ保存され、別の端末でも同じアカウントでログインすれば記録を引き継げます。
+
+> 補足: `firebaseConfig` は公開されても問題ない値です(セキュリティは手順4のルールで担保されます)。`index.html` の `FB_BUILTIN_CONFIG` にこのconfigを埋め込めば、端末ごとの貼り付けも不要になります。

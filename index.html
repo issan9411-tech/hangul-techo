@@ -415,6 +415,33 @@ h2:first-child{margin-top:6px}
     <div style="margin-top:8px"><button class="btn red" id="bkLoad">読み込む(この端末の記録を上書き)</button></div>
     <p class="hint" id="bkMsg" style="margin-top:8px"></p>
   </div>
+  <div class="tk-card" id="accountBox" hidden style="margin-top:14px">
+    <b>👤 アカウント(クラウド同期)</b>
+    <div id="acSetup" hidden>
+      <p class="hint" style="margin-top:6px">初回設定: READMEの手順で無料のFirebaseプロジェクトを作り、ウェブアプリの firebaseConfig({ apiKey: ... } の部分)をここに貼り付けてください。</p>
+      <textarea id="acCfg" rows="5" placeholder='{ apiKey: "...", authDomain: "...", projectId: "...", appId: "..." }' style="width:100%;font:inherit;font-size:11px;border:1.5px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink);box-sizing:border-box"></textarea>
+      <div style="margin-top:8px"><button class="btn" id="acCfgSave">設定を保存</button></div>
+    </div>
+    <div id="acAuth" hidden>
+      <p class="hint" style="margin-top:6px">メールアドレスとパスワード(6文字以上)で登録すると、学習記録がクラウドに保存され、複数の端末で同期できます。</p>
+      <input id="acEmail" type="email" placeholder="メールアドレス" autocomplete="email" style="width:100%;font:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg);color:var(--ink);box-sizing:border-box;margin-bottom:8px">
+      <input id="acPw" type="password" placeholder="パスワード(6文字以上)" autocomplete="current-password" style="width:100%;font:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg);color:var(--ink);box-sizing:border-box;margin-bottom:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="acLogin">ログイン</button>
+        <button class="btn ghost" id="acReg">新規登録</button>
+      </div>
+    </div>
+    <div id="acIn" hidden>
+      <p id="acWho" style="margin:6px 0 10px;font-size:13.5px"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="acPushBtn">⬆ クラウドに保存</button>
+        <button class="btn" id="acPullBtn">⬇ クラウドから読み込み</button>
+        <button class="btn ghost" id="acLogout">ログアウト</button>
+      </div>
+      <p class="hint" style="margin-top:8px">ログイン中は約1分ごと・画面を離れるときに自動でクラウドへ保存されます。</p>
+    </div>
+    <p class="hint" id="acMsg" style="margin-top:8px"></p>
+  </div>
 </section>
 
 <!-- ============ 文字表 ============ -->
@@ -2922,6 +2949,7 @@ const HOME_MENU = [
  {icon:"🎧", t:"リスニング会話", d:"2〜3人の会話ドラマで耳をきたえる", go:()=>{showPane("renshu"); rSetMode("listen");}},
  {icon:"🗣", t:"会話練習", d:"シナリオ会話とローカルAIフリートーク", go:()=>showPane("renshu")},
  {icon:"💾", t:"記録のバックアップ", d:"別の端末への引き継ぎ・データ保存", go:()=>{const b=document.getElementById("backupBox"); b.hidden=!b.hidden; if(!b.hidden) b.scrollIntoView({behavior:"smooth"});}},
+ {icon:"👤", t:"アカウント", d:"ログインして記録をクラウドに同期", go:()=>{const b=document.getElementById("accountBox"); b.hidden=!b.hidden; if(!b.hidden){b.scrollIntoView({behavior:"smooth"}); fbInit();}}},
 ];
 function tkSetMode(id){
   const i = TK_MODES.findIndex(m=>m.id===id);
@@ -3002,6 +3030,173 @@ document.getElementById("bkLoad").addEventListener("click",()=>{
     setTimeout(()=>location.reload(), 800);
   }catch(e){ msg.textContent = "⚠️ 保存に失敗しました。"; }
 });
+
+/* ================= アカウント(Firebaseクラウド同期) ================= */
+/* FB_BUILTIN_CONFIG に firebaseConfig を埋め込むと、全端末で設定貼り付けが不要になります */
+const FB_BUILTIN_CONFIG = null;
+function fbGetConfig(){
+  if(FB_BUILTIN_CONFIG) return FB_BUILTIN_CONFIG;
+  try{ const s = localStorage.getItem("hj.fbcfg"); if(s) return JSON.parse(s); }catch(e){}
+  return null;
+}
+let fbLoaded = false, fbLoading = null, fbUser = null, fbLastBlob = "", fbTimer = null;
+function fbMsg(t){ const el = document.getElementById("acMsg"); if(el) el.innerHTML = t; }
+function fbLoadSdk(){
+  if(fbLoaded) return Promise.resolve(true);
+  if(fbLoading) return fbLoading;
+  const urls = [
+    "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
+    "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js",
+    "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js",
+  ];
+  fbLoading = urls.reduce((p,u)=>p.then(()=>new Promise((res,rej)=>{
+    const s = document.createElement("script");
+    s.src = u;
+    s.onload = res;
+    s.onerror = ()=>rej(new Error(u));
+    document.head.appendChild(s);
+  })), Promise.resolve()).then(()=>{ fbLoaded = true; return true; })
+  .catch(()=>{ fbLoading = null; return false; });
+  return fbLoading;
+}
+function fbBlob(){
+  const o = bkCollect();
+  delete o["hj.fbcfg"];
+  return JSON.stringify(o);
+}
+async function fbInit(){
+  const cfg = fbGetConfig();
+  const setup = document.getElementById("acSetup");
+  if(setup) setup.hidden = !!cfg;
+  document.getElementById("acAuth").hidden = true;
+  document.getElementById("acIn").hidden = true;
+  if(!cfg) return;
+  fbMsg("接続中…");
+  const ok = await fbLoadSdk();
+  if(!ok){
+    fbMsg("⚠️ この環境ではログイン機能を利用できません。公開サイト(github.ioのページ)でご利用ください。");
+    return;
+  }
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+  }catch(e){ fbMsg("⚠️ 設定を読み込めませんでした: "+tkEsc(e.message||e)); return; }
+  fbMsg("");
+  firebase.auth().onAuthStateChanged(u=>{
+    fbUser = u;
+    fbRenderAuth();
+    if(u) fbAfterLogin();
+    else if(fbTimer){ clearInterval(fbTimer); fbTimer = null; }
+  });
+}
+function fbRenderAuth(){
+  document.getElementById("acAuth").hidden = !!fbUser || !fbGetConfig();
+  document.getElementById("acIn").hidden = !fbUser;
+  if(fbUser) document.getElementById("acWho").innerHTML = "✅ <b>"+tkEsc(fbUser.email)+"</b> でログイン中";
+}
+function fbErrJa(e){
+  const c = (e && e.code) || "";
+  if(c.indexOf("email-already-in-use")>=0) return "このメールアドレスは登録済みです。「ログイン」を押してください。";
+  if(c.indexOf("invalid-email")>=0) return "メールアドレスの形式が正しくありません。";
+  if(c.indexOf("weak-password")>=0) return "パスワードは6文字以上にしてください。";
+  if(c.indexOf("invalid-credential")>=0 || c.indexOf("wrong-password")>=0 || c.indexOf("user-not-found")>=0) return "メールアドレスまたはパスワードが違います。";
+  if(c.indexOf("too-many-requests")>=0) return "試行回数が多すぎます。しばらく待ってからお試しください。";
+  if(c.indexOf("network")>=0) return "ネットワークエラーです。接続を確認してください。";
+  if(c.indexOf("operation-not-allowed")>=0) return "Firebase側で「メール/パスワード」ログインが有効になっていません(Authentication→ログイン方法を確認)。";
+  if(c.indexOf("permission")>=0 || c.indexOf("insufficient")>=0) return "Firestoreのセキュリティルールを確認してください(READMEのルールを貼り付けて公開)。";
+  return "エラー: "+tkEsc((e && e.message) || String(e));
+}
+function fbDoc(){ return firebase.firestore().collection("users").doc(fbUser.uid); }
+async function fbPush(auto){
+  if(!fbUser) return;
+  try{
+    const blob = fbBlob();
+    await fbDoc().set({ data: blob, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    fbLastBlob = blob;
+    if(!auto) fbMsg("⬆ クラウドに保存しました("+new Date().toLocaleTimeString()+")");
+  }catch(e){ if(!auto) fbMsg("⚠️ 保存に失敗: "+fbErrJa(e)); }
+}
+function fbApply(blob){
+  try{
+    const data = JSON.parse(blob);
+    Object.keys(data).forEach(k=>{ if(k.indexOf("hj.")===0 && k!=="hj.fbcfg") localStorage.setItem(k, data[k]); });
+    fbLastBlob = blob;
+    fbMsg("⬇ クラウドの記録を読み込みました。再読み込みします…");
+    setTimeout(()=>location.reload(), 800);
+  }catch(e){ fbMsg("⚠️ 読み込みに失敗しました。"); }
+}
+async function fbPull(){
+  if(!fbUser) return;
+  try{
+    const d = await fbDoc().get();
+    if(!d.exists){ fbMsg("クラウドにまだ記録がありません。まず「⬆ クラウドに保存」を押してください。"); return; }
+    fbApply(d.data().data);
+  }catch(e){ fbMsg("⚠️ 読み込みに失敗: "+fbErrJa(e)); }
+}
+async function fbAfterLogin(){
+  try{
+    const d = await fbDoc().get();
+    const localBlob = fbBlob();
+    const meaningful = Object.keys(bkCollect()).filter(k=>k!=="hj.fbcfg" && k!=="hj.tab");
+    if(!d.exists){
+      await fbPush(true);
+      fbMsg("初回同期: この端末の記録をクラウドに保存しました。以後は自動で同期されます。");
+    } else if(d.data().data === localBlob){
+      fbLastBlob = localBlob;
+      fbMsg("✅ クラウドと同期済みです。");
+    } else if(meaningful.length === 0){
+      fbApply(d.data().data);
+      return;
+    } else {
+      fbMsg("⚠️ クラウドとこの端末の記録が異なります。<b>この端末の方が新しい</b>なら「⬆ クラウドに保存」、<b>別の端末で進めた記録を使う</b>なら「⬇ クラウドから読み込み」を押してください。");
+    }
+  }catch(e){ fbMsg("⚠️ "+fbErrJa(e)); }
+  if(fbTimer) clearInterval(fbTimer);
+  fbTimer = setInterval(()=>{ if(fbUser && fbBlob() !== fbLastBlob) fbPush(true); }, 60000);
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "hidden" && fbUser && fbLoaded && fbBlob() !== fbLastBlob) fbPush(true);
+});
+document.getElementById("acCfgSave").addEventListener("click", ()=>{
+  let raw = (document.getElementById("acCfg").value || "").trim();
+  const m = raw.match(/\{[\s\S]*\}/);
+  if(m) raw = m[0];
+  let cfg = null;
+  try{ cfg = JSON.parse(raw); }
+  catch(e){
+    try{ cfg = (new Function("return ("+raw+")"))(); }catch(e2){}
+  }
+  if(!cfg || !cfg.apiKey || !cfg.projectId){
+    fbMsg("⚠️ firebaseConfig を読み取れませんでした。apiKey と projectId を含む { ... } の部分を貼り付けてください。");
+    return;
+  }
+  try{ localStorage.setItem("hj.fbcfg", JSON.stringify(cfg)); }catch(e){}
+  fbMsg("✅ 設定を保存しました。");
+  fbInit();
+});
+document.getElementById("acReg").addEventListener("click", async ()=>{
+  const em = document.getElementById("acEmail").value.trim();
+  const pw = document.getElementById("acPw").value;
+  if(!em || !pw){ fbMsg("メールアドレスとパスワードを入力してください。"); return; }
+  fbMsg("登録中…");
+  try{ await firebase.auth().createUserWithEmailAndPassword(em, pw); }
+  catch(e){ fbMsg("⚠️ "+fbErrJa(e)); }
+});
+document.getElementById("acLogin").addEventListener("click", async ()=>{
+  const em = document.getElementById("acEmail").value.trim();
+  const pw = document.getElementById("acPw").value;
+  if(!em || !pw){ fbMsg("メールアドレスとパスワードを入力してください。"); return; }
+  fbMsg("ログイン中…");
+  try{ await firebase.auth().signInWithEmailAndPassword(em, pw); }
+  catch(e){ fbMsg("⚠️ "+fbErrJa(e)); }
+});
+document.getElementById("acLogout").addEventListener("click", async ()=>{
+  try{ await firebase.auth().signOut(); fbMsg("ログアウトしました。記録はこの端末には残っています。"); }catch(e){}
+});
+document.getElementById("acPushBtn").addEventListener("click", ()=>fbPush(false));
+document.getElementById("acPullBtn").addEventListener("click", ()=>{
+  if(confirm("この端末の学習記録を、クラウドの内容で上書きします。よろしいですか?")) fbPull();
+});
+if(fbGetConfig()) fbInit();
 
 /* 保存されたタブを開く(全機能の初期化後) */
 let startPane = "home";
