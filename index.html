@@ -401,6 +401,20 @@ h2:first-child{margin-top:6px}
   <div class="srs-stats" id="homeStats"></div>
   <h2>なにをする?</h2>
   <div class="home-menu" id="homeMenu"></div>
+  <div class="tk-card" id="backupBox" hidden style="margin-top:14px">
+    <b>💾 記録のバックアップ・引き継ぎ</b>
+    <p class="hint" style="margin-top:6px">学習記録はこの端末のブラウザ内に保存されています。別の端末へ引き継ぐには、①「引き継ぎコードを作成」→ コピー → ②新しい端末でこの画面を開き、下の欄に貼り付けて「読み込む」を押してください。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="btn" id="bkMake">引き継ぎコードを作成</button>
+      <button class="btn ghost" id="bkDl">ファイルで保存</button>
+      <button class="btn ghost" id="bkCopy" hidden>コードをコピー</button>
+    </div>
+    <textarea id="bkOut" readonly rows="3" hidden style="width:100%;font:inherit;font-size:11px;border:1.5px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink);box-sizing:border-box"></textarea>
+    <div style="border-top:1px dashed var(--line);margin:12px 0"></div>
+    <textarea id="bkIn" rows="3" placeholder="ここに引き継ぎコードを貼り付け" style="width:100%;font:inherit;font-size:11px;border:1.5px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink);box-sizing:border-box"></textarea>
+    <div style="margin-top:8px"><button class="btn red" id="bkLoad">読み込む(この端末の記録を上書き)</button></div>
+    <p class="hint" id="bkMsg" style="margin-top:8px"></p>
+  </div>
 </section>
 
 <!-- ============ 文字表 ============ -->
@@ -537,6 +551,7 @@ h2:first-child{margin-top:6px}
   </div>
   <div id="listenArea" hidden>
     <p class="hint">2〜3人の会話を聞いてリスニング練習。会話を選んで「▶ 続けて再生」(話す人によって声の高さが変わります)。表示を「音声のみ」にすると聞き取り特訓モードになり、吹き出しをタップするとその行だけ再生&表示できます。</p>
+    <p class="hint" id="dlgVoiceInfo"></p>
     <div class="chips" id="dlgPick"></div>
     <div class="chips blue" id="dlgSubMode"></div>
     <div class="chat" id="dlgBox" hidden>
@@ -833,12 +848,14 @@ const FIN = ["","ㄱ","ㄲ","ㄳ","ㄴ","ㄵ","ㄶ","ㄷ","ㄹ","ㄺ","ㄻ","ㄼ
 const FIN_R = ["","k","k","k","n","n","n","t","l","k","m","p","l","l","p","l","m","p","p","t","t","ng","t","t","k","t","p","t"];
 
 /* ================= 音声(TTS) ================= */
-let koVoice = null, ttsOk = ("speechSynthesis" in window);
+let koVoice = null, koVoices = [], ttsOk = ("speechSynthesis" in window);
 function pickVoice(){
   if(!ttsOk) return;
   const vs = speechSynthesis.getVoices();
-  koVoice = vs.find(v=>/^ko/i.test(v.lang)) || null;
+  koVoices = vs.filter(v=>/^ko/i.test(v.lang));
+  koVoice = koVoices[0] || null;
   if(vs.length && !koVoice) document.getElementById("ttsNote").style.display="block";
+  if(window.dlgVoiceNote) dlgVoiceNote();
 }
 if(ttsOk){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 else document.getElementById("ttsNote").style.display="block";
@@ -2672,10 +2689,85 @@ const DLGS = [
  [0,"갑자기 아니야. 오래 생각했어.","カプチャギ アニヤ。オレ センガケッソ","急じゃないよ。ずっと考えてた。"],
  [1,"사실 나도야. 나도 너 좋아해.","サシル ナドヤ。ナド ノ チョアヘ","実は私も。私も好きだよ。"],
 ], q:{q:"2人の関係はどうなりましたか?", c:["両想いだとわかった","ケンカ別れした","ただの友達のままだった","引っ越しの話をした"]}},
+{t:"🚕 タクシー", lv:"やさしい", ppl:["運転手","客"], lines:[
+ [0,"어서 오세요. 어디로 갈까요?","オソオセヨ。オディロ カルカヨ?","いらっしゃい。どちらまで?"],
+ [1,"인천공항으로 가 주세요.","インチョンゴンハンウロ カ ジュセヨ","仁川空港までお願いします。"],
+ [0,"네, 안전벨트 매 주세요.","ネ、アンジョンベルトゥ メ ジュセヨ","はい、シートベルトをお締めください。"],
+ [1,"시간이 얼마나 걸려요?","シガニ オルマナ コルリョヨ?","時間はどのくらいかかりますか?"],
+ [0,"지금은 안 막혀서 사십 분쯤 걸려요.","チグムン アン マキョソ サシップンチュム コルリョヨ","今は渋滞していないので40分ほどです。"],
+ [1,"다행이네요. 좀 서둘러 주세요.","タヘンイネヨ。チョム ソドゥルロ ジュセヨ","よかった。少し急いでください。"],
+ [0,"네, 알겠습니다.","ネ、アルゲッスムニダ","はい、わかりました。"],
+], q:{q:"空港までどのくらいかかりますか?", c:["40分ほど","2時間","10分","半日"]}},
+{t:"🏪 コンビニ", lv:"やさしい", ppl:["店員","客"], lines:[
+ [0,"어서 오세요.","オソオセヨ","いらっしゃいませ。"],
+ [1,"이 삼각김밥 데워 주세요.","イ サムガクキムパプ テウォ ジュセヨ","このおにぎり、温めてください。"],
+ [0,"네. 봉투 필요하세요?","ネ。ポントゥ ピリョハセヨ?","はい。袋は必要ですか?"],
+ [1,"아니요, 괜찮아요.","アニヨ、クェンチャナヨ","いいえ、大丈夫です。"],
+ [0,"결제는 어떻게 하시겠어요?","キョルチェヌン オットケ ハシゲッソヨ?","お支払いはどうなさいますか?"],
+ [1,"카드로요. 아, 이 커피도 같이요.","カドゥロヨ。ア、イ コピド カチヨ","カードで。あ、このコーヒーも一緒に。"],
+ [0,"네, 사천오백 원입니다.","ネ、サチョノベグォニムニダ","はい、4,500ウォンです。"],
+], q:{q:"お客さんがしたことは?", c:["おにぎりを温めてもらった","袋を2枚もらった","現金で払った","コーヒーを返品した"]}},
+{t:"💇 美容室", lv:"ふつう", ppl:["美容師","客"], lines:[
+ [0,"오늘 어떻게 해 드릴까요?","オヌル オットケ ヘ ドゥリルカヨ?","今日はどうなさいますか?"],
+ [1,"조금만 다듬어 주세요.","チョグムマン タドゥモ ジュセヨ","少しだけ整えてください。"],
+ [0,"길이는 이대로 괜찮으세요?","キリヌン イデロ クェンチャヌセヨ?","長さはこのままでいいですか?"],
+ [1,"네, 앞머리만 좀 잘라 주세요.","ネ、アンモリマン チョム チャルラ ジュセヨ","はい、前髪だけ切ってください。"],
+ [0,"파마나 염색은 안 하세요?","パマナ ヨムセグン アン ハセヨ?","パーマやカラーはなさいませんか?"],
+ [1,"다음에 할게요. 오늘은 시간이 없어서요.","タウメ ハルケヨ。オヌルン シガニ オプソソヨ","今度にします。今日は時間がなくて。"],
+ [0,"알겠습니다. 금방 끝나요.","アルゲッスムニダ。クムバン クンナヨ","わかりました。すぐ終わりますよ。"],
+], q:{q:"お客さんの注文は?", c:["前髪を切って少し整える","パーマをかける","カラーリングする","何もしない"]}},
+{t:"🤒 病院で診察", lv:"ふつう", ppl:["医者","患者"], lines:[
+ [0,"어디가 불편하세요?","オディガ プルピョナセヨ?","どうなさいましたか?"],
+ [1,"어제부터 목이 아프고 열이 나요.","オジェブト モギ アプゴ ヨリ ナヨ","昨日から喉が痛くて熱があります。"],
+ [0,"기침도 하세요?","キチムド ハセヨ?","咳も出ますか?"],
+ [1,"네, 밤에 특히 심해요.","ネ、パメ トゥキ シメヨ","はい、夜に特にひどいです。"],
+ [0,"감기네요. 약을 삼일 치 처방해 드릴게요.","カムギネヨ。ヤグル サミルチ チョバンヘ ドゥリルケヨ","風邪ですね。3日分の薬を処方します。"],
+ [1,"네, 감사합니다.","ネ、カムサハムニダ","はい、ありがとうございます。"],
+ [0,"푹 쉬고 물 많이 드세요.","プク シゴ ムル マニ トゥセヨ","ゆっくり休んで、水分をたくさん摂ってください。"],
+], q:{q:"診察の結果は?", c:["風邪で3日分の薬をもらった","骨折で入院した","注射を打った","異常なしだった"]}},
+{t:"🛬 空港チェックイン", lv:"ふつう", ppl:["職員","乗客"], lines:[
+ [0,"여권을 보여 주시겠어요?","ヨクォヌル ポヨ ジュシゲッソヨ?","パスポートを見せていただけますか?"],
+ [1,"네, 여기요.","ネ、ヨギヨ","はい、どうぞ。"],
+ [0,"부치실 짐이 있으세요?","プチシル チミ イッスセヨ?","お預けになる荷物はありますか?"],
+ [1,"캐리어 하나 있어요.","ケリオ ハナ イッソヨ","スーツケースが一つあります。"],
+ [0,"여기에 올려 주세요. 창가와 통로 중 어느 쪽이 좋으세요?","ヨギエ オルリョ ジュセヨ。チャンカワ トンノ チュン オヌ チョギ チョウセヨ?","こちらに載せてください。窓側と通路側、どちらがよろしいですか?"],
+ [1,"창가 자리로 부탁해요.","チャンカ チャリロ プタケヨ","窓側でお願いします。"],
+ [0,"네, 탑승구는 십오 번, 탑승은 열 시 반부터입니다.","ネ、タプスングヌン シボボン、タプスンウン ヨルシ バンブトイムニダ","はい、15番ゲート、搭乗は10時半からです。"],
+], q:{q:"乗客が選んだ席は?", c:["窓側","通路側","真ん中の席","自由席"]}},
+{t:"🎤 推し活・コンサート", lv:"ふつう", ppl:["ユナ","ジヒョン","ミンス"], lines:[
+ [0,"얘들아, 콘서트 티켓 예매 성공했어!","イェドゥラ、コンソトゥ ティケッ イェメ ソンゴンヘッソ!","みんな、コンサートのチケット取れたよ!"],
+ [1,"대박! 진짜? 경쟁 엄청 심했잖아.","テバク!チンチャ?キョンジェン オムチョン シメッチャナ","すごい!ほんとに?競争激しかったじゃん。"],
+ [2,"몇 열이야? 무대 가까워?","ミョッ ヨリヤ?ムデ カカウォ?","何列?ステージ近い?"],
+ [0,"오 열이야! 얼굴 보이겠지?","オ ヨリヤ!オルグル ポイゲッチ?","5列目だよ!顔見えるよね?"],
+ [1,"완전 가깝네. 부럽다!","ワンジョン カカムネ。プロプタ!","めっちゃ近いじゃん。うらやましい!"],
+ [2,"응원봉 챙기는 거 잊지 마.","ウンウォンボン チェンギヌン ゴ イッチ マ","ペンライト忘れないでね。"],
+ [0,"당연하지! 굿즈도 살 거야.","タンヨナジ!グッジュド サル コヤ","当たり前!グッズも買うつもり。"],
+ [1,"끝나고 후기 꼭 들려줘!","クンナゴ フギ コク トゥルリョジュォ!","終わったら感想聞かせてね!"],
+], q:{q:"ユナの席は何列目ですか?", c:["5列目","50列目","立ち見","2階席"]}},
+{t:"😢 ケンカと仲直り", lv:"チャレンジ", ppl:["ユナ","ミンス"], lines:[
+ [0,"어제 왜 연락 안 했어? 계속 기다렸잖아.","オジェ ウェ ヨルラク アン ヘッソ?ケソク キダリョッチャナ","昨日どうして連絡しなかったの?ずっと待ってたのに。"],
+ [1,"미안해. 핸드폰이 고장 나서 연락을 못 했어.","ミアネ。ヘンドゥポニ コジャンナソ ヨルラグル モテッソ","ごめん。携帯が壊れて連絡できなかったんだ。"],
+ [0,"정말이야? 거짓말이면 화낼 거야.","チョンマリヤ?コジンマリミョン ファネル コヤ","本当?嘘だったら怒るからね。"],
+ [1,"진짜야. 오늘 아침에 겨우 고쳤어.","チンチャヤ。オヌル アチメ キョウ コチョッソ","本当だよ。今朝やっと直したんだ。"],
+ [0,"걱정했단 말이야. 무슨 일 생긴 줄 알고.","コクチョンヘッタン マリヤ。ムスン イル センギン ジュル アルゴ","心配したんだから。何かあったのかと思って。"],
+ [1,"미안해. 앞으로는 이런 일 없을 거야.","ミアネ。アプロヌン イロン イル オプスル コヤ","ごめん。これからはこんなこと無いようにするよ。"],
+ [0,"알았어. 이번만 봐준다.","アラッソ。イボンマン バジュンダ","わかった。今回だけ許してあげる。"],
+ [1,"고마워. 대신 오늘 저녁은 내가 살게.","コマウォ。テシン オヌル チョニョグン ネガ サルケ","ありがとう。代わりに今日の夜ご飯はおごるよ。"],
+], q:{q:"連絡できなかった理由は?", c:["携帯が故障したから","寝ていたから","忘れていたから","わざと無視したから"]}},
+{t:"🍻 会社の打ち上げ", lv:"チャレンジ", ppl:["部長","ミンス","スジン"], lines:[
+ [0,"자, 오늘 프로젝트 성공을 위해서 건배합시다!","チャ、オヌル プロジェクトゥ ソンゴンウル ウィヘソ コンベハプシダ!","さあ、今日はプロジェクトの成功を祝して乾杯しましょう!"],
+ [1,"건배! 다들 정말 고생 많으셨습니다.","コンベ!タドゥル チョンマル コセン マヌショッスムニダ","乾杯!皆さん本当にお疲れさまでした。"],
+ [2,"부장님 덕분에 잘 끝났어요.","プジャンニム トップネ チャル クンナッソヨ","部長のおかげで無事終わりました。"],
+ [0,"아니에요, 다 여러분이 열심히 해 준 덕분이지요.","アニエヨ、タ ヨロブニ ヨルシミ ヘ ジュン トップニジヨ","いえいえ、皆さんが頑張ってくれたおかげですよ。"],
+ [1,"다음 프로젝트도 잘 부탁드립니다.","タウム プロジェクトゥド チャル プタクトゥリムニダ","次のプロジェクトもよろしくお願いします。"],
+ [2,"그런데 부장님, 이차는 노래방이죠?","クロンデ プジャンニム、イチャヌン ノレバンイジョ?","ところで部長、二次会はカラオケですよね?"],
+ [0,"하하, 좋아요. 오늘은 끝까지 갑시다!","ハハ、チョアヨ。オヌルン クッカジ カプシダ!","はは、いいですよ。今日はとことん行きましょう!"],
+], q:{q:"この集まりの目的は?", c:["プロジェクト成功のお祝い","誕生日会","送別会","新入社員の歓迎会"]}},
 ];
 const DLG_VIEWS = [["all","すべて表示"],["kr","ハングルのみ"],["none","音声のみ"]];
 let dlgIdx = -1, dlgView = "all", dlgToken = 0, dlgRevealed = new Set();
-const DLG_PITCH = [1, 0.8, 1.2];
+const DLG_PITCH = [1, 0.6, 1.5];
+const DLG_RATE = [0.85, 0.72, 1.0];
 function rSetMode(id){
   const i = R_MODES.findIndex(m=>m.id===id);
   if(i>=0) rmEl.children[i].click();
@@ -2713,10 +2805,13 @@ function dlgSelect(i, btn){
 function dlgSpeakLine(d, li, onend){
   if(!ttsOk){ if(onend) setTimeout(onend, 400); return; }
   try{
+    const sp = d.lines[li][0];
     const u = new SpeechSynthesisUtterance(d.lines[li][1]);
-    u.lang = "ko-KR"; if(koVoice) u.voice = koVoice;
-    u.rate = 0.85;
-    u.pitch = DLG_PITCH[d.lines[li][0]] || 1;
+    u.lang = "ko-KR";
+    if(koVoices.length > 1) u.voice = koVoices[sp % koVoices.length];
+    else if(koVoice) u.voice = koVoice;
+    u.rate = koVoices.length > 1 ? 0.85 : (DLG_RATE[sp] !== undefined ? DLG_RATE[sp] : 0.85);
+    u.pitch = DLG_PITCH[sp] || 1;
     if(onend) u.onend = onend;
     speechSynthesis.speak(u);
   }catch(e){ if(onend) onend(); }
@@ -2801,6 +2896,17 @@ function dlgShowQuiz(){
 document.getElementById("dlgPlayBtn").addEventListener("click", dlgPlayAll);
 document.getElementById("dlgStopBtn").addEventListener("click", dlgStopAll);
 document.getElementById("dlgQuizBtn").addEventListener("click", dlgShowQuiz);
+function dlgVoiceNote(){
+  const el = document.getElementById("dlgVoiceInfo");
+  if(!el) return;
+  if(!ttsOk || !koVoice){ el.textContent = "⚠️ この端末では韓国語の音声が見つかりません。"; return; }
+  if(koVoices.length > 1){
+    el.innerHTML = "🔈 この端末には韓国語の声が<b>"+koVoices.length+"種類</b>あります。話者ごとに別の声で再生します。";
+  } else {
+    el.innerHTML = "🔈 この端末の韓国語の声は1種類のため、<b>話す速さと高さ</b>で話者を区別します。OSに韓国語の音声を追加すると、話者ごとに本当に別の声になります(Windows: 設定→時刻と言語→言語と地域→韓国語を追加して音声パックをインストール / Mac: システム設定→アクセシビリティ→読み上げコンテンツ→「声を管理」で韓国語の声を追加)。";
+  }
+}
+dlgVoiceNote();
 
 
 /* ================= ホーム ================= */
@@ -2815,6 +2921,7 @@ const HOME_MENU = [
  {icon:"🔁", t:"きょうの復習", d:"忘れる前にもう一度(SRS)", go:()=>showPane("fukushu"), badge:true},
  {icon:"🎧", t:"リスニング会話", d:"2〜3人の会話ドラマで耳をきたえる", go:()=>{showPane("renshu"); rSetMode("listen");}},
  {icon:"🗣", t:"会話練習", d:"シナリオ会話とローカルAIフリートーク", go:()=>showPane("renshu")},
+ {icon:"💾", t:"記録のバックアップ", d:"別の端末への引き継ぎ・データ保存", go:()=>{const b=document.getElementById("backupBox"); b.hidden=!b.hidden; if(!b.hidden) b.scrollIntoView({behavior:"smooth"});}},
 ];
 function tkSetMode(id){
   const i = TK_MODES.findIndex(m=>m.id===id);
@@ -2840,6 +2947,61 @@ function renderHome(){
     menu.appendChild(c);
   });
 }
+
+/* ================= バックアップ・引き継ぎ ================= */
+function bkCollect(){
+  const o = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf("hj.")===0) o[k] = localStorage.getItem(k);
+    }
+  }catch(e){}
+  return o;
+}
+function bkCode(){
+  return "HJ1." + btoa(unescape(encodeURIComponent(JSON.stringify(bkCollect()))));
+}
+document.getElementById("bkMake").addEventListener("click",()=>{
+  const ta = document.getElementById("bkOut");
+  ta.value = bkCode();
+  ta.hidden = false;
+  document.getElementById("bkCopy").hidden = false;
+  document.getElementById("bkMsg").textContent = "コードを作成しました("+Object.keys(bkCollect()).length+"項目)。コピーして新しい端末に貼り付けてください。";
+});
+document.getElementById("bkCopy").addEventListener("click", async ()=>{
+  const ta = document.getElementById("bkOut");
+  try{ await navigator.clipboard.writeText(ta.value); document.getElementById("bkMsg").textContent = "✅ コピーしました。"; }
+  catch(e){ ta.hidden=false; ta.select(); document.getElementById("bkMsg").textContent = "全選択しました。Ctrl+C(長押し→コピー)でコピーしてください。"; }
+});
+document.getElementById("bkDl").addEventListener("click",()=>{
+  try{
+    const blob = new Blob([bkCode()], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "hangul-techo-backup.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.getElementById("bkMsg").textContent = "ファイルを保存しました。中身のコードを新しい端末に貼り付ければ引き継げます。";
+  }catch(e){
+    document.getElementById("bkMsg").textContent = "この環境ではファイル保存が使えません。「引き継ぎコードを作成」をお使いください。";
+  }
+});
+document.getElementById("bkLoad").addEventListener("click",()=>{
+  const v = (document.getElementById("bkIn").value||"").trim();
+  const msg = document.getElementById("bkMsg");
+  if(v.indexOf("HJ1.")!==0){ msg.textContent = "⚠️ コードの形式が違います(HJ1. で始まるコード全体を貼り付けてください)。"; return; }
+  let data;
+  try{ data = JSON.parse(decodeURIComponent(escape(atob(v.slice(4))))); }
+  catch(e){ msg.textContent = "⚠️ コードを読み取れませんでした。最後までコピーできているか確認してください。"; return; }
+  if(!data || typeof data !== "object" || !Object.keys(data).length){ msg.textContent = "⚠️ データが空です。"; return; }
+  if(!confirm("この端末の学習記録を、貼り付けたデータで上書きします。よろしいですか?")) return;
+  try{
+    Object.keys(data).forEach(k=>{ if(k.indexOf("hj.")===0) localStorage.setItem(k, data[k]); });
+    msg.textContent = "✅ 読み込みました。ページを再読み込みします…";
+    setTimeout(()=>location.reload(), 800);
+  }catch(e){ msg.textContent = "⚠️ 保存に失敗しました。"; }
+});
 
 /* 保存されたタブを開く(全機能の初期化後) */
 let startPane = "home";
