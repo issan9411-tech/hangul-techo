@@ -3095,7 +3095,16 @@ function dlgVoiceNote(){
   if(koVoices.length > 1){
     el.innerHTML = "🔈 この端末には韓国語の声が<b>"+koVoices.length+"種類</b>あります。話者ごとに別の声で再生します。";
   } else {
-    el.innerHTML = "🔈 この端末の韓国語の声は1種類のため、<b>話す速さと高さ</b>で話者を区別します。OSに韓国語の音声を追加すると、話者ごとに本当に別の声になります(Windows: 設定→時刻と言語→言語と地域→韓国語を追加して音声パックをインストール / Mac: システム設定→アクセシビリティ→読み上げコンテンツ→「声を管理」で韓国語の声を追加)。";
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+    if(isIOS){
+      el.innerHTML = "🔈 現在この端末の韓国語の声は1種類のため、<b>話す速さと高さ</b>で話者を区別しています。iPhone/iPadでは韓国語の声を追加できる場合があります: 設定 → アクセシビリティ → 読み上げコンテンツ → 声 → 韓国語 で別の声をダウンロードし、ブラウザを完全に終了して開き直してください(反映されない機種・OSバージョンもあります。その場合もこのまま速さと高さで聞き分けられます)。";
+    } else if(isAndroid){
+      el.innerHTML = "🔈 Androidのブラウザでは韓国語の音声が1種類しか使えない仕様のため、代わりに<b>話す速さと高さ</b>を話者ごとに変えて聞き分けられるようにしています。複数の声で聞きたい場合は、PC(Windows/Mac)で開くと本当に別の声になります。";
+    } else {
+      el.innerHTML = "🔈 この端末の韓国語の声は1種類のため、<b>話す速さと高さ</b>で話者を区別します。OSに韓国語の音声を追加すると、話者ごとに本当に別の声になります(Windows: 設定→時刻と言語→言語と地域→韓国語を追加して音声パックをインストール / Mac: システム設定→アクセシビリティ→読み上げコンテンツ→「声を管理」で韓国語の声を追加)。";
+    }
   }
 }
 dlgVoiceNote();
