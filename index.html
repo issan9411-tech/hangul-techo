@@ -351,7 +351,6 @@ h2:first-child{margin-top:6px}
   background:var(--red);color:#fff;border-radius:999px;
   min-width:16px;padding:0 4px;font-size:10px;line-height:16px;
 }
-.subnav{margin-bottom:4px}
 .home-menu{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .hcard{
   font:inherit;text-align:left;
@@ -376,6 +375,40 @@ h2:first-child{margin-top:6px}
 .dlg-ctrl{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);flex-wrap:wrap;justify-content:center}
 .bub-spk{border:0;background:transparent;cursor:pointer;font-size:11.5px;font-weight:700;font-family:inherit;color:inherit;padding:3px 0 0;display:block;opacity:.75;text-align:left}
 .bub-spk:hover{opacity:1}
+
+/* ---- モバイル操作性 ---- */
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
+@media (prefers-reduced-motion: no-preference){
+  .btn:active,.chips button:active,.choices button:active,.tk-choices button:active,
+  .hcard:active,.bnav button:active,.cell:active,.picker .opts button:active,
+  .tk-levels button:active,.chat .hints button:active{transform:scale(.96)}
+}
+.subnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);padding:6px 0;margin-bottom:4px}
+@media (pointer:coarse), (max-width:600px){
+  header.app{padding-block:12px 0}
+  header.app h1{font-size:19px}
+  .btn{padding:11px 18px;font-size:14px}
+  .chips button{padding:8px 15px;font-size:13px}
+  .choices button{min-height:48px}
+  .tk-choices button{min-height:48px;padding:12px 14px}
+  .picker .opts button{min-width:47px;min-height:44px;font-size:19px}
+  .tk-levels button{padding:10px 16px}
+  .srs-card .grades{gap:8px}
+  .srs-card .grades .btn{flex:1 1 0;min-width:88px;padding:13px 6px}
+  .phrase .row .btn{flex:1 1 auto;min-width:94px}
+  .chat .inrow .btn{padding:11px 14px}
+  .quiz .q button.spk{padding:20px 30px}
+  .cell{padding:12px 8px 10px}
+  .cell .learn{width:24px;height:24px;top:6px;right:7px;font-size:13px}
+  .syl{padding:2px}
+  .dlg-ctrl .btn{flex:1 1 auto;min-width:104px}
+  .bnav button{font-size:11px;padding:5px 2px 4px}
+  .bnav button .ic{font-size:23px}
+  .chat .inrow input, #tvSearch, #acEmail, #acPw, #aiUrl, #aiModel, #acCfg, #bkIn, #bkOut{font-size:16px !important}
+  .quiz{padding:16px 14px}
+  .tk-card{padding:15px 14px}
+}
 
 @media (max-width:430px){
   #homeStats{grid-template-columns:repeat(2,1fr)}
