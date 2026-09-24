@@ -379,6 +379,17 @@ h2:first-child{margin-top:6px}
 .grchip{font:inherit;font-size:11px;font-weight:700;background:var(--indigo-soft);color:var(--indigo);border:0;border-radius:999px;padding:3px 10px;cursor:pointer}
 .bub-add{border:0;background:transparent;cursor:pointer;font:inherit;font-size:10.5px;font-weight:700;color:inherit;padding:3px 0 0;opacity:.6;display:block;text-align:left}
 .bub-add:disabled{opacity:.85}
+.chips.scrollx{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
+.chips.scrollx::-webkit-scrollbar{display:none}
+.chips.scrollx button{flex:0 0 auto;white-space:nowrap}
+.fab{
+  position:fixed;z-index:19;border:0;border-radius:999px;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+  font:inherit;font-weight:700;cursor:pointer;padding:10px 15px;
+  bottom:calc(76px + env(safe-area-inset-bottom,0px));
+}
+#toTop{right:14px;background:var(--surface);color:var(--ink-soft);border:1px solid var(--line)}
+#backPill{left:14px;background:var(--indigo);color:var(--btn-fg)}
 
 /* ---- モバイル操作性 ---- */
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -507,9 +518,9 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
 <!-- ============ フレーズ ============ -->
 <section class="pane" id="pane-kaiwa" hidden>
   <p class="hint">ハングルの<b>文字をタップ</b>すると「子音+母音」に分解。<b>🎤 発音</b>でマイクに向かって話すと、通じるかチェックできます。</p>
-  <input id="phSearch" placeholder="🔍 フレーズをさがす(ハングル・読み・意味)" autocomplete="off"
+  <input id="phSearch" type="search" placeholder="🔍 フレーズをさがす(ハングル・読み・意味)" autocomplete="off"
     style="width:100%;font:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--surface);color:var(--ink);margin-bottom:10px;box-sizing:border-box">
-  <div class="chips" id="cats"></div>
+  <div class="chips scrollx" id="cats"></div>
   <div id="phraseList"></div>
 </section>
 
@@ -533,8 +544,8 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
 
 <!-- ============ 文法 ============ -->
 <section class="pane" id="pane-bunpo" hidden>
-  <p class="hint">よく使う「文の型」30パターン。型を覚えると、単語を入れ替えるだけで自分の文が無限に作れます。例文は▶で発音、「✍️作ってみよう」は自分で考えてから答えを開きましょう。</p>
-  <input id="grSearch" placeholder="🔍 型をさがす(고 싶어요・したい など)" autocomplete="off"
+  <p class="hint">よく使う「文の型」40パターン。型を覚えると、単語を入れ替えるだけで自分の文が無限に作れます。例文は▶で発音、「✍️作ってみよう」は自分で考えてから答えを開きましょう。</p>
+  <input id="grSearch" type="search" placeholder="🔍 型をさがす(고 싶어요・したい など)" autocomplete="off"
     style="width:100%;font:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--surface);color:var(--ink);margin-bottom:10px;box-sizing:border-box">
   <div class="chips blue" id="grLvs"></div>
   <div id="grList"></div>
@@ -585,7 +596,7 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
   <div id="tkVocabArea" hidden>
     <p class="hint">TOPIK級別の頻出単語です。ハングルの文字をタップすると「子音+母音+パッチム」に分解、🎤で発音チェックができます。</p>
     <div class="tk-levels" id="tvLevels" style="margin-bottom:10px"></div>
-    <input id="tvSearch" placeholder="🔍 単語をさがす(ハングル・読み・意味)" autocomplete="off"
+    <input id="tvSearch" type="search" placeholder="🔍 単語をさがす(ハングル・読み・意味)" autocomplete="off"
       style="width:100%;font:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--surface);color:var(--ink);margin-bottom:10px;box-sizing:border-box">
     <p class="progress" id="tvProg"></p>
     <div id="tvList"></div>
@@ -630,7 +641,7 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
   <div id="listenArea" hidden>
     <p class="hint">2〜3人の会話を聞いてリスニング練習。会話を選んで「▶ 続けて再生」(話す人によって声の高さが変わります)。表示を「音声のみ」にすると聞き取り特訓モードになり、吹き出しをタップするとその行だけ再生&表示できます。</p>
     <p class="hint" id="dlgVoiceInfo"></p>
-    <div class="chips" id="dlgPick"></div>
+    <div class="chips scrollx" id="dlgPick"></div>
     <div class="chips blue" id="dlgSubMode"></div>
     <div class="chat" id="dlgBox" hidden>
       <div class="log" id="dlgLog"></div>
@@ -1233,6 +1244,7 @@ function srErrMsg(err){
 
 /* ================= ナビゲーション ================= */
 const PANE_IDS = ["home","moji","kaiwa","kumitate","bunpo","quiz","topik","fukushu","renshu"];
+let currentPane = "home";
 const NAV_GROUPS = [
  {id:"home", icon:"🏠", label:"ホーム", panes:[["home","ホーム"]]},
  {id:"manabu", icon:"✏️", label:"まなぶ", panes:[["moji","文字"],["kaiwa","フレーズ"],["kumitate","組み立て"],["bunpo","文法"]]},
@@ -1259,6 +1271,8 @@ function navGroupOf(pane){
 }
 function showPane(name){
   if(!document.getElementById("pane-"+name)) name = "home";
+  currentPane = name;
+  backPill.hidden = true;
   const g = navGroupOf(name);
   PANE_IDS.forEach(p=>{
     const el = document.getElementById("pane-"+p);
@@ -1282,6 +1296,38 @@ function showPane(name){
   try{ localStorage.setItem("hj.tab", name); }catch(e){}
   window.scrollTo(0, 0);
 }
+const backPill = document.createElement("button");
+backPill.id = "backPill";
+backPill.className = "fab";
+backPill.hidden = true;
+backPill.textContent = "← 戻る";
+document.body.appendChild(backPill);
+let navBackFn = null;
+backPill.addEventListener("click",()=>{
+  const f = navBackFn;
+  navBackFn = null;
+  backPill.hidden = true;
+  if(f) f();
+});
+function navJump(fn){
+  const prevPane = currentPane;
+  const prevY = window.scrollY;
+  fn();
+  navBackFn = ()=>{
+    showPane(prevPane);
+    setTimeout(()=>window.scrollTo(0, prevY), 60);
+  };
+  backPill.hidden = false;
+}
+const toTop = document.createElement("button");
+toTop.id = "toTop";
+toTop.className = "fab";
+toTop.hidden = true;
+toTop.textContent = "↑";
+toTop.setAttribute("aria-label","ページの先頭へ");
+toTop.addEventListener("click",()=>window.scrollTo({top:0, behavior:"smooth"}));
+document.body.appendChild(toTop);
+addEventListener("scroll", ()=>{ toTop.hidden = window.scrollY < 500; }, {passive:true});
 
 /* ================= 文字表 ================= */
 let known = new Set();
@@ -1718,6 +1764,10 @@ const QUIZ_MODES = [
  {id:"next", label:"次のひとこと"},
 ];
 let quizMode = "moji";
+try{
+  const qm = localStorage.getItem("hj.quizMode");
+  if(qm && QUIZ_MODES.some(m=>m.id === qm)) quizMode = qm;
+}catch(e){}
 const qmEl = document.getElementById("quizModes");
 QUIZ_MODES.forEach(m=>{
   const b = document.createElement("button");
@@ -1725,6 +1775,7 @@ QUIZ_MODES.forEach(m=>{
   b.setAttribute("aria-pressed", m.id===quizMode);
   b.addEventListener("click",()=>{
     quizMode = m.id;
+    try{ localStorage.setItem("hj.quizMode", quizMode); }catch(e){}
     qmEl.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", QUIZ_MODES[i].id===quizMode));
     newQuiz();
   });
@@ -2659,11 +2710,11 @@ function tvRender(){
     const b5 = document.createElement("button");
     b5.className = "btn ghost";
     b5.textContent = "📖 例文";
-    b5.addEventListener("click",()=>{
+    b5.addEventListener("click",()=>navJump(()=>{
       showPane("kaiwa");
       document.getElementById("phSearch").value = w.kr;
       renderPhrases();
-    });
+    }));
     row.append(b1,b2,b3,b4,b5);
     card.append(row, dec);
     attachPron(card, w.kr, b3);
@@ -3525,6 +3576,7 @@ function dlgSelect(i, btn){
   const qz = document.getElementById("dlgQuiz");
   qz.hidden = true; qz.dataset.done = "";
   dlgRender();
+  setTimeout(()=>document.getElementById("dlgBox").scrollIntoView({behavior:"smooth", block:"start"}), 100);
 }
 function dlgSpeakLine(d, li, onend){
   if(!ttsOk){ if(onend) setTimeout(onend, 400); return; }
@@ -3684,6 +3736,16 @@ const GRAMMAR = [
 {lv:"中級",p:"〜죠?",mean:"〜でしょう?・〜ですよね?(確認)",how:"語幹+죠?(지요?の縮約)",ex:[["이거 맛있죠?","イゴ マシッチョ?","これおいしいでしょう?"],["여기 처음이죠?","ヨギ チョウミジョ?","ここ初めてですよね?"]],q:["내일 오죠?","ネイル オジョ?","明日来ますよね?"]},
 {lv:"中級",p:"〜거든요",mean:"〜なんですよ(理由の説明)",how:"語幹+거든요",ex:[["지금 좀 바쁘거든요","チグム チョム パップゴドゥンヨ","今ちょっと忙しいんですよ"],["내일 시험이 있거든요","ネイル シホミ イッコドゥンヨ","明日試験があるんですよ"]],q:["한국 드라마를 좋아하거든요","ハングク ドゥラマルル チョアハゴドゥンヨ","韓国ドラマが好きなんですよ"]},
 {lv:"中級",p:"〜잖아요",mean:"〜じゃないですか(相手も知っている前提)",how:"語幹+잖아요",ex:[["어제 말했잖아요","オジェ マレッチャナヨ","昨日言ったじゃないですか"],["이거 비싸잖아요","イゴ ピッサジャナヨ","これ高いじゃないですか"]],q:["우리 약속했잖아요","ウリ ヤクソケッチャナヨ","私たち約束したじゃないですか"]},
+{lv:"中級",p:"〜(으)면서",mean:"〜しながら(同時動作)",how:"語幹+면서(パッチム無)/으면서(有)",ex:[["음악을 들으면서 공부해요","ウマグル トゥルミョンソ コンブヘヨ","音楽を聴きながら勉強します"],["밥을 먹으면서 이야기했어요","パブル モグミョンソ イヤギヘッソヨ","ご飯を食べながら話しました"]],q:["커피를 마시면서 일해요","コピルル マシミョンソ イレヨ","コーヒーを飲みながら働きます"]},
+{lv:"中級",p:"〜기 때문에",mean:"〜なので(かたい理由)",how:"語幹+기 때문에。名詞は 名詞+때문에",ex:[["비가 오기 때문에 못 가요","ピガ オギ テムネ モッ カヨ","雨が降るので行けません"],["시험이 있기 때문에 바빠요","シホミ イッキ テムネ パッパヨ","試験があるので忙しいです"]],q:["바쁘기 때문에 못 만나요","パップギ テムネ モン マンナヨ","忙しいので会えません"]},
+{lv:"中級",p:"〜게",mean:"〜く・〜に(副詞化)",how:"形容詞の語幹+게",ex:[["맛있게 드세요","マシッケ トゥセヨ","おいしく召し上がってください"],["예쁘게 포장해 주세요","イェップゲ ポジャンヘ ジュセヨ","きれいに包んでください"]],q:["크게 말해 주세요","クゲ マレ ジュセヨ","大きな声で話してください"]},
+{lv:"中級",p:"〜지 않아요",mean:"〜しません・〜くないです(後置否定)",how:"語幹+지 않아요(안〜より少しかたい)",ex:[["여기서 멀지 않아요","ヨギソ モルジ アナヨ","ここから遠くありません"],["별로 어렵지 않아요","ピョルロ オリョプチ アナヨ","あまり難しくありません"]],q:["생각보다 비싸지 않아요","センガクポダ ピッサジ アナヨ","思ったより高くありません"]},
+{lv:"中級",p:"〜아/어야 돼요",mean:"〜しなければなりません",how:"아/어の形+야 돼요(=야 해요)",ex:[["내일 일찍 일어나야 돼요","ネイル イルチク イロナヤ デヨ","明日早く起きなければなりません"],["약을 꼭 먹어야 돼요","ヤグル コク モゴヤ デヨ","薬を必ず飲まなければなりません"]],q:["지금 가야 돼요","チグム カヤ デヨ","今行かなければなりません"]},
+{lv:"中級",p:"〜기로 했어요",mean:"〜することにしました(決定)",how:"動詞の語幹+기로 했어요",ex:[["내일 친구를 만나기로 했어요","ネイル チングルル マンナギロ ヘッソヨ","明日友達に会うことにしました"],["담배를 끊기로 했어요","タムベルル クンキロ ヘッソヨ","タバコをやめることにしました"]],q:["매일 운동하기로 했어요","メイル ウンドンハギロ ヘッソヨ","毎日運動することにしました"]},
+{lv:"中級",p:"〜(으)ㄴ/는데",mean:"〜なんですが(前置き・やわらげ)",how:"動詞+는데、形容詞+ㄴ/은데",ex:[["배고픈데 밥 먹으러 갈까요?","ペゴプンデ パプ モグロ カルカヨ?","お腹すいたんですが、食べに行きましょうか?"],["미안한데 좀 도와줘","ミアナンデ チョム トワジュォ","悪いんだけど、ちょっと手伝って"]],q:["시간 있는데 같이 갈래요?","シガン インヌンデ カチ カルレヨ?","時間あるんですが、一緒に行きませんか?"]},
+{lv:"中級",p:"〜다가",mean:"〜している途中で(中断・転換)",how:"動詞の語幹+다가",ex:[["학교에 가다가 친구를 만났어요","ハッキョエ カダガ チングルル マンナッソヨ","学校に行く途中で友達に会いました"],["자다가 깼어요","チャダガ ケッソヨ","寝ている途中で目が覚めました"]],q:["책을 읽다가 잤어요","チェグル イクタガ チャッソヨ","本を読んでいる途中で寝ました"]},
+{lv:"中級",p:"〜(으)ㄹ게요",mean:"〜しますね(約束・意志)",how:"語幹+ㄹ게요(パッチム無)/을게요(有)",ex:[["내일 연락할게요","ネイル ヨルラカルケヨ","明日連絡しますね"],["오늘은 제가 계산할게요","オヌルン チェガ ケサナルケヨ","今日は私が払いますね"]],q:["금방 갈게요","クムバン カルケヨ","すぐ行きますね"]},
+{lv:"中級",p:"〜아/어 보여요",mean:"〜に見えます(印象)",how:"아/어の形+보여요",ex:[["오늘 피곤해 보여요","オヌル ピゴネ ボヨヨ","今日疲れて見えます"],["이 케이크 맛있어 보여요","イ ケイク マシッソ ボヨヨ","このケーキおいしそうに見えます"]],q:["정말 행복해 보여요","チョンマル ヘンボケ ボヨヨ","本当に幸せそうに見えます"]},
 ];
 
 var GR_LINKS = [
@@ -3707,6 +3769,15 @@ var GR_LINKS = [
  ["〜죠?", ["죠?","지요?"], "죠?"],
  ["〜거든요", ["거든"], "거든"],
  ["〜잖아요", ["잖아"], "잖아"],
+ ["〜(으)면서", ["면서"], "면서"],
+ ["〜기 때문에", ["기 때문"], "기 때문"],
+ ["〜지 않아요", ["지 않"], "지 않"],
+ ["〜아/어야 돼요", ["야 돼","야 해"], "야 돼"],
+ ["〜기로 했어요", ["기로 했"], "기로 했"],
+ ["〜(으)ㄴ/는데", ["는데"], "는데"],
+ ["〜다가", ["다가"], "다가"],
+ ["〜(으)ㄹ게요", ["ㄹ게","을게"], "ㄹ게"],
+ ["〜아/어 보여요", [/보여(?! ?주)/], "보여"],
  ["〜았/었어요", ["았어","었어","했어"], "었어"],
  ["〜(으)ㄹ 거예요", [grFutureGeo], "거예요"],
  ["안 〜", [/(^|\s)안 (?!돼)/], "안 "],
@@ -3733,12 +3804,14 @@ function grDetect(kr){
   return out;
 }
 function grJump(pn){
-  showPane("bunpo");
-  const el = document.getElementById("grSearch");
-  el.value = pn;
-  grLv = "すべて";
-  grLvsEl.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", i===0));
-  renderGrammar();
+  navJump(()=>{
+    showPane("bunpo");
+    const el = document.getElementById("grSearch");
+    el.value = pn;
+    grLv = "すべて";
+    grLvsEl.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", i===0));
+    renderGrammar();
+  });
 }
 const GR_LVS = ["すべて","初級","初中級","中級"];
 let grLv = "すべて";
@@ -3797,11 +3870,11 @@ function renderGrammar(){
       seeb.className = "btn ghost";
       seeb.style.cssText = "padding:5px 13px;font-size:12px";
       seeb.textContent = "📖 この型のフレーズを見る";
-      seeb.addEventListener("click",()=>{
+      seeb.addEventListener("click",()=>navJump(()=>{
         showPane("kaiwa");
         document.getElementById("phSearch").value = glink[2];
         renderPhrases();
-      });
+      }));
       act.appendChild(seeb);
     }
     const addb = document.createElement("button");
@@ -3841,7 +3914,7 @@ const HOME_MENU = [
  {icon:"✏️", t:"文字をおぼえる", d:"ハングル表・発音・覚えたチェック", go:()=>showPane("moji")},
  {icon:"💬", t:"フレーズ", d:"16カテゴリ383フレーズ+丁寧⇔タメ口対応表", go:()=>showPane("kaiwa")},
  {icon:"🧩", t:"文字の組み立て", d:"子音+母音+パッチムで1文字を作る", go:()=>showPane("kumitate")},
- {icon:"📐", t:"文法・文の型", d:"30の型を覚えて自分の文を作る", go:()=>showPane("bunpo")},
+ {icon:"📐", t:"文法・文の型", d:"40の型を覚えて自分の文を作る", go:()=>showPane("bunpo")},
  {icon:"🎧", t:"クイズ", d:"読み・聞き取り・会話の流れを腕試し", go:()=>showPane("quiz")},
  {icon:"📖", t:"TOPIK問題", d:"全6級132問・日本語解説つき", go:()=>{showPane("topik"); tkSetMode("quiz");}},
  {icon:"📚", t:"TOPIK単語帳", d:"頻出360語・検索と発音チェック", go:()=>{showPane("topik"); tkSetMode("vocab");}},
@@ -3908,11 +3981,11 @@ function renderHomeDaily(){
     const b2 = document.createElement("button");
     b2.className = "btn ghost";
     b2.textContent = "📖 フレーズを見る";
-    b2.addEventListener("click",()=>{
+    b2.addEventListener("click",()=>navJump(()=>{
       showPane("kaiwa");
       document.getElementById("phSearch").value = link[2];
       renderPhrases();
-    });
+    }));
     row.appendChild(b2);
   }
   card.appendChild(row);
