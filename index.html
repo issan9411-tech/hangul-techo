@@ -376,6 +376,7 @@ h2:first-child{margin-top:6px}
 .bub-spk{border:0;background:transparent;cursor:pointer;font-size:11.5px;font-weight:700;font-family:inherit;color:inherit;padding:3px 0 0;display:block;opacity:.75;text-align:left}
 .bub-spk:hover{opacity:1}
 .pairlbl{font-size:11px;font-weight:700;color:var(--ink-soft);min-width:64px}
+.grchip{font:inherit;font-size:11px;font-weight:700;background:var(--indigo-soft);color:var(--indigo);border:0;border-radius:999px;padding:3px 10px;cursor:pointer}
 
 /* ---- モバイル操作性 ---- */
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -1478,6 +1479,17 @@ function renderPairCard(list, pr){
     mk("👔 丁寧", pkr, pkana);
     mk("🧢 タメ口", bkr, bkana);
     if(note) card.insertAdjacentHTML("beforeend","<div class='hint' style='margin:2px 0 6px'>💡 "+note+"</div>");
+    const addp = document.createElement("button");
+    addp.className = "btn ghost";
+    addp.style.cssText = "margin-top:4px;margin-right:8px;padding:6px 14px;font-size:12.5px";
+    addp.textContent = "📥 復習に追加";
+    addp.addEventListener("click",()=>{
+      const n1 = srsAddExtra("対応表(丁寧)", pkr, pkana, jp);
+      const n2 = srsAddExtra("対応表(タメ口)", bkr, bkana, jp+"(タメ口で)");
+      addp.textContent = (n1||n2) ? "✓ 追加しました" : "✓ 追加済み";
+      addp.disabled = true;
+    });
+    card.appendChild(addp);
     const mic = document.createElement("button");
     mic.className = "btn red";
     mic.style.cssText = "margin-top:4px;padding:6px 14px;font-size:12.5px";
@@ -1582,6 +1594,19 @@ function renderPhrases(){
     card.appendChild(kline);
     card.insertAdjacentHTML("beforeend",
       "<div class='kana'>"+kana+"</div><div class='roman'>"+rom+"</div><div class='jp'>"+jp+(p[4] ? " <span style='color:var(--mustard);font-size:11px;font-weight:700'>"+p[4]+"</span>" : "")+"</div>");
+    const pats = grDetect(kr);
+    if(pats.length){
+      const prow = document.createElement("div");
+      prow.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;margin-top:6px";
+      pats.forEach(pn=>{
+        const pb = document.createElement("button");
+        pb.className = "grchip";
+        pb.textContent = "📐 "+pn;
+        pb.addEventListener("click",()=>grJump(pn));
+        prow.appendChild(pb);
+      });
+      card.appendChild(prow);
+    }
     const row = document.createElement("div");
     row.className = "row";
     const b1 = document.createElement("button");
@@ -1808,6 +1833,11 @@ function answer(btn, o, correct, feedbackAns){
       if(b.textContent === correct) b.classList.add("hit");
     });
     fb.textContent = "正解は "+feedbackAns; fb.className = "fb bad";
+    if(quizMode === "phrase" && qCur && qCur.kr){
+      if(srsAddExtra(qCur.cat, qCur.kr, qCur.kana, qCur.jp)) fb.textContent += "(📥 復習に追加)";
+    } else if(quizMode === "next" && qCur && qCur.c){
+      if(srsAddExtra("次のひとこと", qCur.c[0][0], "", qCur.c[0][1])) fb.textContent += "(📥 復習に追加)";
+    }
   }
   if(quizMode==="moji" && /[가-힣]/.test(qCur.ch)) speak(qCur.ch, 0.7);
   else if(quizMode==="next") speak(correct, 0.85);
@@ -2623,7 +2653,15 @@ function tvRender(){
         "全体の進捗: <b>"+tvKnown.size+"</b> / "+TKWORDS.length+" 語";
     });
     if(!ttsOk){ b1.disabled = b2.disabled = true; }
-    row.append(b1,b2,b3,b4);
+    const b5 = document.createElement("button");
+    b5.className = "btn ghost";
+    b5.textContent = "📖 例文";
+    b5.addEventListener("click",()=>{
+      showPane("kaiwa");
+      document.getElementById("phSearch").value = w.kr;
+      renderPhrases();
+    });
+    row.append(b1,b2,b3,b4,b5);
     card.append(row, dec);
     attachPron(card, w.kr, b3);
     list.appendChild(card);
@@ -2632,7 +2670,25 @@ function tvRender(){
 
 
 /* ================= 単語検索・SRS統合・単語テスト ================= */
-const SRS_POOL = FLAT.concat(TKWORDS.map(w=>({cat:"TOPIK単語・"+w.lv+"級", kr:w.kr, kana:w.kana, rom:w.rom, jp:w.jp})));
+let srsExtra = [];
+try{ srsExtra = JSON.parse(localStorage.getItem("hj.srs.extra")||"[]"); }catch(e){}
+const SRS_POOL = FLAT.concat(TKWORDS.map(w=>({cat:"TOPIK単語・"+w.lv+"級", kr:w.kr, kana:w.kana, rom:w.rom, jp:w.jp}))).concat(srsExtra);
+function srsAddExtra(cat, kr, kana, jp){
+  if(!kr) return false;
+  if(!SRS_POOL.some(x=>x.kr === kr)){
+    const it = {cat: cat, kr: kr, kana: kana||"", rom: "", jp: jp||""};
+    SRS_POOL.push(it);
+    srsExtra.push(it);
+    try{ localStorage.setItem("hj.srs.extra", JSON.stringify(srsExtra)); }catch(e){}
+  }
+  if(!srs[kr]){
+    srs[kr] = {iv:0, due:Date.now(), reps:0};
+    srsSave();
+    srsBadge();
+    return true;
+  }
+  return false;
+}
 function tvQuery(){ const el = document.getElementById("tvSearch"); return el ? el.value.trim().toLowerCase() : ""; }
 function tvFilter(){
   const q = tvQuery();
@@ -3617,6 +3673,48 @@ const GRAMMAR = [
 {lv:"中級",p:"〜잖아요",mean:"〜じゃないですか(相手も知っている前提)",how:"語幹+잖아요",ex:[["어제 말했잖아요","オジェ マレッチャナヨ","昨日言ったじゃないですか"],["이거 비싸잖아요","イゴ ピッサジャナヨ","これ高いじゃないですか"]],q:["우리 약속했잖아요","ウリ ヤクソケッチャナヨ","私たち約束したじゃないですか"]},
 ];
 
+var GR_LINKS = [
+ ["〜고 싶어요", ["고 싶"], "고 싶"],
+ ["〜아/어 주세요", ["주세요"," 줘"], "주세요"],
+ ["〜(으)ㄹ 수 있어요", ["수 있어","수 없어"], "수 있"],
+ ["〜아/어도 돼요?", ["도 돼"], "도 돼"],
+ ["〜(으)면 안 돼요", ["면 안 돼"], "면 안 돼"],
+ ["〜고 있어요", ["고 있"], "고 있"],
+ ["〜(으)러 가요", ["러 가"], "러 가"],
+ ["〜(으)니까", ["니까"], "니까"],
+ ["〜지만", ["지만"], "지만"],
+ ["〜(으)ㄹ 때", ["ㄹ 때","을 때"], "때"],
+ ["〜기 전에", ["기 전에"], "기 전에"],
+ ["〜(으)ㄴ 후에", ["ㄴ 후에","은 후에"], "후에"],
+ ["〜(으)ㄴ 적이 있어요", ["적이 있"], "적이 있"],
+ ["〜(으)려고 해요", ["려고"], "려고"],
+ ["〜(으)ㄹ 것 같아요", ["것 같"], "것 같"],
+ ["〜네요", ["네요"], "네요"],
+ ["〜죠?", ["죠?","지요?"], "죠?"],
+ ["〜거든요", ["거든"], "거든"],
+ ["〜잖아요", ["잖아"], "잖아"],
+ ["〜았/었어요", ["았어","었어","했어"], "었어"],
+ ["〜(으)ㄹ 거예요", ["거예요","거야"], "거예요"],
+ ["안 〜", ["안 "], "안 "],
+ ["못 〜", ["못 "], "못 "],
+];
+function grDetect(kr){
+  if(typeof GR_LINKS === "undefined" || !GR_LINKS) return [];
+  const out = [];
+  for(const e of GR_LINKS){
+    if(e[1].some(t=>kr.indexOf(t) >= 0)) out.push(e[0]);
+    if(out.length >= 2) break;
+  }
+  return out;
+}
+function grJump(pn){
+  showPane("bunpo");
+  const el = document.getElementById("grSearch");
+  el.value = pn;
+  grLv = "すべて";
+  grLvsEl.querySelectorAll("button").forEach((x,i)=>x.setAttribute("aria-pressed", i===0));
+  renderGrammar();
+}
 const GR_LVS = ["すべて","初級","初中級","中級"];
 let grLv = "すべて";
 const grLvsEl = document.getElementById("grLvs");
@@ -3666,6 +3764,33 @@ function renderGrammar(){
       "<div class='jp' style='font-weight:700;margin-top:2px'>"+g.mean+"</div>"+
       "<div class='decomp' style='display:block;margin-top:8px'>📎 接続: "+g.how+"</div>");
     g.ex.forEach(e=>grExRow(card, e[0], e[1], e[2]));
+    const act = document.createElement("div");
+    act.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:10px";
+    const glink = GR_LINKS.find(e=>e[0] === g.p);
+    if(glink){
+      const seeb = document.createElement("button");
+      seeb.className = "btn ghost";
+      seeb.style.cssText = "padding:5px 13px;font-size:12px";
+      seeb.textContent = "📖 この型のフレーズを見る";
+      seeb.addEventListener("click",()=>{
+        showPane("kaiwa");
+        document.getElementById("phSearch").value = glink[2];
+        renderPhrases();
+      });
+      act.appendChild(seeb);
+    }
+    const addb = document.createElement("button");
+    addb.className = "btn ghost";
+    addb.style.cssText = "padding:5px 13px;font-size:12px";
+    addb.textContent = "📥 例文を復習に追加";
+    addb.addEventListener("click",()=>{
+      let n = 0;
+      g.ex.concat([g.q]).forEach(e=>{ if(srsAddExtra("文法 "+g.p, e[0], e[1], e[2])) n++; });
+      addb.textContent = n ? "✓ 追加しました("+n+"件)" : "✓ 追加済み";
+      addb.disabled = true;
+    });
+    act.appendChild(addb);
+    card.appendChild(act);
     const pr = document.createElement("div");
     pr.className = "tk-ex";
     pr.style.marginTop = "10px";
