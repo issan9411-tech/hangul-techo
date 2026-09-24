@@ -375,6 +375,7 @@ h2:first-child{margin-top:6px}
 .dlg-ctrl{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);flex-wrap:wrap;justify-content:center}
 .bub-spk{border:0;background:transparent;cursor:pointer;font-size:11.5px;font-weight:700;font-family:inherit;color:inherit;padding:3px 0 0;display:block;opacity:.75;text-align:left}
 .bub-spk:hover{opacity:1}
+.pairlbl{font-size:11px;font-weight:700;color:var(--ink-soft);min-width:64px}
 
 /* ---- モバイル操作性 ---- */
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -1324,6 +1325,50 @@ function decompose(ch){
   if(f>0) parts.push({lbl:"パッチム", j:FIN[f], r:FIN_R[f]});
   return parts;
 }
+/* 丁寧⇔タメ口 対応表: [意味, 丁寧, 読み, タメ口, 読み, 補足] */
+const PAIRS = [
+["ありがとう","감사합니다","カムサハムニダ","고마워","コマウォ","친구には 고마워、より丁寧なら 고맙습니다 も。"],
+["ごめんなさい","죄송합니다","チェソンハムニダ","미안해","ミアネ","目上には 죄송합니다 一択。미안해요 は中間の丁寧さ。"],
+["こんにちは・やあ","안녕하세요","アンニョンハセヨ","안녕","アンニョン",""],
+["さようなら(去る人へ)","안녕히 가세요","アンニョンヒ カセヨ","잘 가","チャル ガ",""],
+["おやすみなさい","안녕히 주무세요","アンニョンヒ チュムセヨ","잘 자","チャル ジャ","주무시다は「寝る」の尊敬語。"],
+["大丈夫です","괜찮아요","クェンチャナヨ","괜찮아","クェンチャナ",""],
+["わかりました","알겠습니다","アルゲッスムニダ","알았어","アラッソ","職場では 알겠습니다、友達には 알았어/오키。"],
+["わかりません","모르겠어요","モルゲッソヨ","몰라","モルラ",""],
+["好きです","좋아해요","チョアヘヨ","좋아해","チョアヘ",""],
+["何していますか?","뭐 하세요?","ムォ ハセヨ?","뭐 해?","ムォ ヘ?",""],
+["ご飯食べましたか?","식사하셨어요?","シクサハショッソヨ?","밥 먹었어?","パプ モゴッソ?","韓国式の定番あいさつ。目上には식사(お食事)を使います。"],
+["今どこですか?","지금 어디세요?","チグム オディセヨ?","지금 어디야?","チグム オディヤ?",""],
+["早く来てください","빨리 오세요","パルリ オセヨ","빨리 와","パルリ ワ",""],
+["ちょっと待ってください","잠깐만 기다려 주세요","チャムカンマン キダリョ ジュセヨ","잠깐만","チャムカンマン",""],
+["会いたいです","보고 싶어요","ポゴ シポヨ","보고 싶어","ポゴ シポ",""],
+["お疲れさまでした","수고하셨습니다","スゴハショッスムニダ","수고했어","スゴヘッソ",""],
+["気をつけて帰ってください","조심히 가세요","チョシミ カセヨ","조심히 가","チョシミ カ",""],
+["連絡してください","연락 주세요","ヨルラク ジュセヨ","연락해","ヨルラケ",""],
+["一緒に行きましょう","같이 가요","カチ カヨ","같이 가자","カチ カジャ","〜자=〜しよう(タメ口の勧誘形)。"],
+["おいくつですか?","나이가 어떻게 되세요?","ナイガ オットケ トェセヨ?","몇 살이야?","ミョッ サリヤ?","目上に年齢を聞くときは遠回しな形を使います。"],
+["お名前は?","성함이 어떻게 되세요?","ソンハミ オットケ トェセヨ?","이름이 뭐야?","イルミ ムォヤ?","성함=お名前(이름の尊敬語)。"],
+["これください","이거 주세요","イゴ ジュセヨ","이거 줘","イゴ ジュォ",""],
+["本当ですか?","정말이에요?","チョンマリエヨ?","진짜?","チンチャ?",""],
+["おいしいです","맛있어요","マシッソヨ","맛있어","マシッソ",""],
+["お腹すきました","배고파요","ペゴパヨ","배고파","ペゴパ",""],
+["眠いです","졸려요","チョルリョヨ","졸려","チョルリョ",""],
+["行ってきます","다녀오겠습니다","タニョオゲッスムニダ","다녀올게","タニョオルケ",""],
+["おめでとうございます","축하드려요","チュカドゥリョヨ","축하해","チュカヘ",""],
+["助けてください","도와주세요","トワジュセヨ","도와줘","トワジュォ",""],
+["これ何ですか?","이게 뭐예요?","イゲ ムォエヨ?","이게 뭐야?","イゲ ムォヤ?",""],
+["どうしたんですか?","무슨 일 있으세요?","ムスン イル イッスセヨ?","왜 그래?","ウェ グレ?",""],
+["うれしいです","기뻐요","キッポヨ","기뻐","キッポ",""],
+["また会いましょう","또 만나요","ット マンナヨ","또 보자","ット ボジャ",""],
+["心配しないでください","걱정하지 마세요","コクチョンハジ マセヨ","걱정 마","コクチョン マ",""],
+["頑張ってください","힘내세요","ヒムネセヨ","힘내","ヒムネ",""],
+["座ってください","앉으세요","アンジュセヨ","앉아","アンジャ",""],
+["電話しますね","전화드릴게요","チョヌァドゥリルケヨ","전화할게","チョヌァハルケ","드리다=差し上げる(謙譲)。"],
+["ゆっくり話してください","천천히 말씀해 주세요","チョンチョニ マルスメ ジュセヨ","천천히 말해 줘","チョンチョニ マレ ジュォ","말씀=お言葉(말の尊敬語)。"],
+["お先に失礼します","먼저 가 보겠습니다","モンジョ カ ボゲッスムニダ","먼저 갈게","モンジョ カルケ",""],
+["愛しています","사랑해요","サランヘヨ","사랑해","サランヘ",""],
+];
+
 const catNames = Object.keys(PHRASES);
 let curCat = catNames[0];
 const catsEl = document.getElementById("cats");
@@ -1338,6 +1383,69 @@ catNames.forEach(n=>{
   });
   catsEl.appendChild(b);
 });
+{
+  const pb = document.createElement("button");
+  pb.textContent = "👔⇔🧢 対応表";
+  pb.setAttribute("aria-pressed","false");
+  pb.addEventListener("click",()=>{
+    curCat = "__pairs";
+    catsEl.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===pb));
+    renderPhrases();
+  });
+  catsEl.appendChild(pb);
+}
+function renderPairs(list){
+  list.insertAdjacentHTML("beforeend","<p class='hint'>同じ意味の「丁寧(존댓말)」と「タメ口(반말)」をセットで覚えましょう。目上の人・初対面・お店では👔、友達・年下・恋人には🧢を使います。</p>");
+  PAIRS.forEach(pr=>{
+    const [jp, pkr, pkana, bkr, bkana, note] = pr;
+    const card = document.createElement("div");
+    card.className = "phrase";
+    card.insertAdjacentHTML("beforeend","<div class='jp' style='font-weight:700;font-size:15px;margin-bottom:8px'>"+jp+"</div>");
+    const mk = (lbl, kr, kana)=>{
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap";
+      row.innerHTML = "<span class='pairlbl'>"+lbl+"</span><span class='kr' style='font-size:19px;font-weight:700'>"+kr+"</span><span class='kana' style='font-size:11.5px'>"+kana+"</span>";
+      const b = document.createElement("button");
+      b.className = "btn ghost";
+      b.style.cssText = "padding:4px 12px;font-size:12px";
+      b.textContent = "▶";
+      b.setAttribute("aria-label", lbl+"を再生");
+      b.addEventListener("click",()=>speak(kr, 0.8));
+      row.appendChild(b);
+      card.appendChild(row);
+    };
+    mk("👔 丁寧", pkr, pkana);
+    mk("🧢 タメ口", bkr, bkana);
+    if(note) card.insertAdjacentHTML("beforeend","<div class='hint' style='margin:2px 0 6px'>💡 "+note+"</div>");
+    const mic = document.createElement("button");
+    mic.className = "btn red";
+    mic.style.cssText = "margin-top:4px;padding:6px 14px;font-size:12.5px";
+    mic.textContent = "🎤 発音(どちらの形でもOK)";
+    const box = document.createElement("div");
+    box.className = "pron";
+    mic.addEventListener("click",()=>{
+      box.className = "pron mid"; box.innerHTML = "🎤 どうぞ!(丁寧・タメ口どちらでも)";
+      mic.classList.add("mic-on");
+      recognizeOnce((alts, err)=>{
+        mic.classList.remove("mic-on");
+        if(!alts){ box.className = "pron bad"; box.textContent = srErrMsg(err); return; }
+        let best = alts[0], bs = -1, which = "";
+        alts.forEach(a=>{
+          const sp2 = simScore(pkr, a), sb = simScore(bkr, a);
+          if(sp2 > bs){ bs = sp2; best = a; which = "👔丁寧"; }
+          if(sb > bs){ bs = sb; best = a; which = "🧢タメ口"; }
+        });
+        const cls = bs>=85 ? "good" : bs>=60 ? "mid" : "bad";
+        const msg = bs>=85 ? "完璧です!" : bs>=60 ? "いい感じ!" : "もう一回!";
+        box.className = "pron "+cls;
+        box.innerHTML = "認識: <b class='kr'>"+best+"</b><br><span class='sc'>"+which+"と一致度 "+bs+"%</span> — "+msg;
+      });
+    });
+    if(!SR) mic.disabled = true;
+    card.append(mic, box);
+    list.appendChild(card);
+  });
+}
 function attachPron(card, targetKr, btn){
   const box = document.createElement("div");
   box.className = "pron";
@@ -1374,6 +1482,10 @@ document.getElementById("phSearch").addEventListener("input", ()=>renderPhrases(
 function renderPhrases(){
   const list = document.getElementById("phraseList");
   list.innerHTML = "";
+  if(curCat === "__pairs" && !((document.getElementById("phSearch").value||"").trim())){
+    renderPairs(list);
+    return;
+  }
   phFilter().forEach(p=>{
     const [kr, kana, rom, jp] = p;
     const card = document.createElement("div");
