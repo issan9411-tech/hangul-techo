@@ -377,6 +377,8 @@ h2:first-child{margin-top:6px}
 .bub-spk:hover{opacity:1}
 .pairlbl{font-size:11px;font-weight:700;color:var(--ink-soft);min-width:64px}
 .grchip{font:inherit;font-size:11px;font-weight:700;background:var(--indigo-soft);color:var(--indigo);border:0;border-radius:999px;padding:3px 10px;cursor:pointer}
+.bub-add{border:0;background:transparent;cursor:pointer;font:inherit;font-size:10.5px;font-weight:700;color:inherit;padding:3px 0 0;opacity:.6;display:block;text-align:left}
+.bub-add:disabled{opacity:.85}
 
 /* ---- モバイル操作性 ---- */
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -436,6 +438,7 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
 <!-- ============ ホーム ============ -->
 <section class="pane" id="pane-home">
   <div class="srs-stats" id="homeStats"></div>
+  <div id="homeDaily"></div>
   <h2>なにをする?</h2>
   <div class="home-menu" id="homeMenu"></div>
   <div class="tk-card" id="backupBox" hidden style="margin-top:14px">
@@ -3554,6 +3557,16 @@ function dlgRender(){
       inner = "<span class='s'>🔊 ・・・(タップで再生&表示)</span>";
     }
     div.innerHTML = "<span class='who'>"+d.ppl[sp]+"</span>"+inner;
+    const ab = document.createElement("button");
+    ab.className = "bub-add";
+    ab.textContent = "📥 復習へ";
+    ab.addEventListener("click",(ev)=>{
+      ev.stopPropagation();
+      srsAddExtra("リスニング "+d.t, kr, kana, jp);
+      ab.textContent = "✓ 追加済み";
+      ab.disabled = true;
+    });
+    div.appendChild(ab);
     div.style.cursor = "pointer";
     div.addEventListener("click",()=>{
       dlgStopAll();
@@ -3675,13 +3688,14 @@ const GRAMMAR = [
 
 var GR_LINKS = [
  ["〜고 싶어요", ["고 싶"], "고 싶"],
- ["〜아/어 주세요", ["주세요"," 줘"], "주세요"],
- ["〜(으)ㄹ 수 있어요", ["수 있어","수 없어"], "수 있"],
+ ["〜아/어 주세요", ["주세요","줘"], "주세요"],
+ ["〜(으)ㄹ 수 있어요", ["수 있","수 없"], "수 있"],
  ["〜아/어도 돼요?", ["도 돼"], "도 돼"],
  ["〜(으)면 안 돼요", ["면 안 돼"], "면 안 돼"],
  ["〜고 있어요", ["고 있"], "고 있"],
  ["〜(으)러 가요", ["러 가"], "러 가"],
  ["〜(으)니까", ["니까"], "니까"],
+ ["〜아/어서", [/[가-힣](아서|어서|여서|해서)/], "어서"],
  ["〜지만", ["지만"], "지만"],
  ["〜(으)ㄹ 때", ["ㄹ 때","을 때"], "때"],
  ["〜기 전에", ["기 전에"], "기 전에"],
@@ -3694,15 +3708,26 @@ var GR_LINKS = [
  ["〜거든요", ["거든"], "거든"],
  ["〜잖아요", ["잖아"], "잖아"],
  ["〜았/었어요", ["았어","었어","했어"], "었어"],
- ["〜(으)ㄹ 거예요", ["거예요","거야"], "거예요"],
- ["안 〜", ["안 "], "안 "],
- ["못 〜", ["못 "], "못 "],
+ ["〜(으)ㄹ 거예요", [grFutureGeo], "거예요"],
+ ["안 〜", [/(^|\s)안 (?!돼)/], "안 "],
+ ["못 〜", [/(^|\s)못 /], "못 "],
 ];
+function grEndsRieul(ch){
+  const c = ch.codePointAt(0) - 0xAC00;
+  return c >= 0 && c < 11172 && c % 28 === 8;
+}
+function grFutureGeo(kr){
+  for(const t of [" 거예요", " 거야"]){
+    const i = kr.indexOf(t);
+    if(i >= 1 && grEndsRieul(kr[i-1])) return true;
+  }
+  return false;
+}
 function grDetect(kr){
   if(typeof GR_LINKS === "undefined" || !GR_LINKS) return [];
   const out = [];
   for(const e of GR_LINKS){
-    if(e[1].some(t=>kr.indexOf(t) >= 0)) out.push(e[0]);
+    if(e[1].some(t=>(t instanceof RegExp) ? t.test(kr) : (typeof t === "function" ? t(kr) : kr.indexOf(t) >= 0))) out.push(e[0]);
     if(out.length >= 2) break;
   }
   return out;
@@ -3814,7 +3839,7 @@ renderGrammar();
 /* ================= ホーム ================= */
 const HOME_MENU = [
  {icon:"✏️", t:"文字をおぼえる", d:"ハングル表・発音・覚えたチェック", go:()=>showPane("moji")},
- {icon:"💬", t:"フレーズ", d:"旅行・日常・ドラマ定番の93フレーズ", go:()=>showPane("kaiwa")},
+ {icon:"💬", t:"フレーズ", d:"16カテゴリ383フレーズ+丁寧⇔タメ口対応表", go:()=>showPane("kaiwa")},
  {icon:"🧩", t:"文字の組み立て", d:"子音+母音+パッチムで1文字を作る", go:()=>showPane("kumitate")},
  {icon:"📐", t:"文法・文の型", d:"30の型を覚えて自分の文を作る", go:()=>showPane("bunpo")},
  {icon:"🎧", t:"クイズ", d:"読み・聞き取り・会話の流れを腕試し", go:()=>showPane("quiz")},
@@ -3850,6 +3875,48 @@ function renderHome(){
     c.addEventListener("click", m.go);
     menu.appendChild(c);
   });
+  renderHomeDaily();
+}
+function renderHomeDaily(){
+  const el = document.getElementById("homeDaily");
+  if(!el || typeof GRAMMAR === "undefined") return;
+  const g = GRAMMAR[Math.floor(Date.now()/86400000) % GRAMMAR.length];
+  const link = (typeof GR_LINKS !== "undefined") ? GR_LINKS.find(e=>e[0] === g.p) : null;
+  let rel = [];
+  if(link){
+    rel = FLAT.filter(p=>link[1].some(t=>(t instanceof RegExp) ? t.test(p.kr) : (typeof t === "function" ? t(p.kr) : p.kr.indexOf(t) >= 0))).slice(0, 3);
+  }
+  el.innerHTML = "";
+  const card = document.createElement("div");
+  card.className = "phrase";
+  card.style.margin = "4px 0 14px";
+  card.insertAdjacentHTML("beforeend",
+    "<div style='font-size:11.5px;font-weight:700;color:var(--mustard)'>📅 きょうの型</div>"+
+    "<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px'>"+
+    "<span class='kr' style='font-size:20px;font-weight:700;color:var(--indigo)'>"+g.p+"</span>"+
+    "<span class='jp' style='font-weight:700'>"+g.mean+"</span></div>");
+  grExRow(card, g.ex[0][0], g.ex[0][1], g.ex[0][2]);
+  rel.forEach(p=>grExRow(card, p.kr, p.kana, p.jp));
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:10px";
+  const b1 = document.createElement("button");
+  b1.className = "btn";
+  b1.textContent = "📐 この型を学ぶ";
+  b1.addEventListener("click",()=>grJump(g.p));
+  row.appendChild(b1);
+  if(link){
+    const b2 = document.createElement("button");
+    b2.className = "btn ghost";
+    b2.textContent = "📖 フレーズを見る";
+    b2.addEventListener("click",()=>{
+      showPane("kaiwa");
+      document.getElementById("phSearch").value = link[2];
+      renderPhrases();
+    });
+    row.appendChild(b2);
+  }
+  card.appendChild(row);
+  el.appendChild(card);
 }
 
 /* ================= バックアップ・引き継ぎ ================= */
