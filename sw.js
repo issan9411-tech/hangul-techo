@@ -1,5 +1,5 @@
 /* ハングル手帖 PWA サービスワーカー */
-const CACHE = "hangul-techo-v29";
+const CACHE = "hangul-techo-v30";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", e => {

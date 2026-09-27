@@ -391,6 +391,38 @@ h2:first-child{margin-top:6px}
 #toTop{right:14px;background:var(--surface);color:var(--ink-soft);border:1px solid var(--line)}
 #backPill{left:14px;background:var(--indigo);color:var(--btn-fg)}
 
+/* ---- ホーム(ヒーロー・セクション) ---- */
+.hero{background:linear-gradient(135deg,var(--indigo),#4d7fc9);color:#fff;border-radius:16px;padding:16px 18px;margin:4px 0 14px;box-shadow:var(--shadow)}
+.hero h3{margin:0 0 4px;font-size:17px;color:#fff}
+.hero p{margin:0 0 12px;font-size:12.5px;opacity:.92;line-height:1.5}
+.hero .row{display:flex;gap:8px;flex-wrap:wrap}
+.hero .btn{background:#fff;color:var(--indigo)}
+.hero .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.75)}
+.home-sec{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:18px 0 8px;letter-spacing:.04em}
+.home-sec:first-child{margin-top:4px}
+.home-menu.compact{grid-template-columns:repeat(3,1fr)}
+.home-menu.compact .hcard{padding:10px 6px;align-items:center;text-align:center;gap:0}
+.home-menu.compact .hcard .hic{font-size:20px}
+.home-menu.compact .hcard .ht{font-size:12px}
+.home-menu.compact .hcard .hd{display:none}
+/* ---- おまかせ練習 ---- */
+.gd-steps{display:flex;gap:5px;margin-bottom:10px}
+.gd-steps span{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.gd-steps span.on{background:var(--indigo)}
+.gd-q{font-size:17px;font-weight:700;margin:2px 0 12px}
+.gd-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gd-opts button{font:inherit;text-align:left;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:11px 12px;cursor:pointer;min-height:66px}
+.gd-opts button[aria-pressed="true"]{border-color:var(--indigo);background:var(--indigo-soft);color:var(--indigo)}
+.gd-opts button .ic{font-size:22px;display:block;line-height:1.2}
+.gd-opts button .t{font-weight:700;font-size:14px;display:block}
+.gd-opts button .d{font-size:11px;color:var(--ink-soft);display:block;line-height:1.35}
+.gd-nav{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+.gd-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0 10px}
+.gd-bar i{display:block;height:100%;background:var(--indigo);transition:width .3s}
+.gd-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:12px 0}
+.gd-sum .st{background:var(--surface2);border-radius:10px;padding:8px;text-align:center;font-size:12px}
+.gd-sum .st b{display:block;font-size:18px}
+
 /* ---- モバイル操作性 ---- */
 button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
@@ -448,10 +480,11 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
 
 <!-- ============ ホーム ============ -->
 <section class="pane" id="pane-home">
+  <div id="homeHero"></div>
   <div class="srs-stats" id="homeStats"></div>
   <div id="homeDaily"></div>
   <h2>なにをする?</h2>
-  <div class="home-menu" id="homeMenu"></div>
+  <div id="homeMenu"></div>
   <div class="tk-card" id="voiceBox" hidden style="margin-top:14px">
     <b>🔊 音声設定</b>
     <div class="chips blue" id="ptModes" style="margin:10px 0 8px"></div>
@@ -508,6 +541,17 @@ button,.cell,.bnav,.subnav{user-select:none;-webkit-user-select:none}
       <p class="hint" style="margin-top:8px">ログイン中は約1分ごと・画面を離れるときに自動でクラウドへ保存されます。</p>
     </div>
     <p class="hint" id="acMsg" style="margin-top:8px"></p>
+  </div>
+</section>
+
+<!-- ============ おまかせ練習 ============ -->
+<section class="pane" id="pane-guide" hidden>
+  <div class="tk-card" id="gdWiz"></div>
+  <div id="gdPlay" hidden>
+    <div class="tk-top"><span id="gdInfo"></span><span id="gdScore"></span></div>
+    <div class="gd-bar"><i id="gdBar" style="width:0%"></i></div>
+    <div class="tk-card" id="gdBody"></div>
+    <div style="margin-top:10px"><button class="btn ghost" id="gdQuit">やめて設定に戻る</button></div>
   </div>
 </section>
 
@@ -1508,10 +1552,10 @@ function srErrMsg(err){
 }
 
 /* ================= ナビゲーション ================= */
-const PANE_IDS = ["home","moji","kaiwa","kumitate","bunpo","quiz","topik","fukushu","renshu"];
+const PANE_IDS = ["home","guide","moji","kaiwa","kumitate","bunpo","quiz","topik","fukushu","renshu"];
 let currentPane = "home";
 const NAV_GROUPS = [
- {id:"home", icon:"🏠", label:"ホーム", panes:[["home","ホーム"]]},
+ {id:"home", icon:"🏠", label:"ホーム", panes:[["home","ホーム"],["guide","🎯 おまかせ練習"]]},
  {id:"manabu", icon:"✏️", label:"まなぶ", panes:[["moji","文字"],["kaiwa","フレーズ"],["kumitate","組み立て"],["bunpo","文法"]]},
  {id:"test", icon:"📝", label:"テスト", panes:[["quiz","クイズ"],["topik","TOPIK"]]},
  {id:"fukushu", icon:"🔁", label:"復習", panes:[["fukushu","復習"]]},
@@ -1555,6 +1599,7 @@ function showPane(name){
     sub.appendChild(b);
   });
   if(name==="fukushu") srsOpen();
+  if(name==="guide" && window.gdOpen) gdOpen();
   if(name==="home" && window.renderHome) renderHome();
   const lede = document.querySelector(".lede");
   if(lede) lede.hidden = name!=="home";
@@ -2957,6 +3002,15 @@ function tkRenderQ(){
   });
   body.appendChild(box);
 }
+function tkRecord(qi, ok){
+  const q = TOPIK[qi];
+  const st = tkStats[q.lv] || {s:0,c:0};
+  st.s++; if(ok) st.c++;
+  tkStats[q.lv] = st;
+  if(ok) tkWrong = tkWrong.filter(i=>i!==qi);
+  else if(!tkWrong.includes(qi)) tkWrong.push(qi);
+  tkSave();
+}
 function tkAnswer(btn, opt, correct, qi, box){
   if(tkAnswered) return;
   tkAnswered = true;
@@ -2968,12 +3022,7 @@ function tkAnswer(btn, opt, correct, qi, box){
     [...box.children].forEach(b=>{ if(b.textContent===correct) b.classList.add("hit"); });
     if(!tkSessionWrong.includes(qi)) tkSessionWrong.push(qi);
   }
-  const st = tkStats[q.lv] || {s:0,c:0};
-  st.s++; if(ok) st.c++;
-  tkStats[q.lv] = st;
-  if(ok) tkWrong = tkWrong.filter(i=>i!==qi);
-  else if(!tkWrong.includes(qi)) tkWrong.push(qi);
-  tkSave();
+  tkRecord(qi, ok);
   document.getElementById("tkScoreLine").textContent = "正解 "+tkScore;
   const ex = document.createElement("div");
   ex.className = "tk-ex";
@@ -4716,22 +4765,310 @@ function renderGrammar(){
 }
 renderGrammar();
 
+/* ================= おまかせ練習(質問に答えて今日のメニューを作る) ================= */
+const GD_STEPS = [
+ {key:"goal", q:"きょうは何を目指す?", opts:[
+   ["topik","📖","TOPIK対策","試験形式の問題を中心に"],
+   ["kaiwa","💬","会話力アップ","会話の流れ・フレーズの聞き取り"],
+   ["review","🔁","弱点つぶし","間違えた問題を優先して出題"],
+   ["mix","🎲","バランスよく","いろいろな形式を少しずつ"]]},
+ {key:"lv", q:"レベルは?", opts:[
+   ["a","🌱","初級","TOPIK 1〜2級・基本の単語と文法"],
+   ["b","🌿","中級","TOPIK 3〜4級・日常〜社会の話題"],
+   ["c","🌳","上級","TOPIK 5〜6級・論説文や専門語彙"],
+   ["all","🌈","おまかせ","全レベルから出題"]]},
+ {key:"skill", q:"鍛えたい力は?(いくつでも)", multi:true, opts:[
+   ["listen","🎧","聞き取り","音声を聞いて答える"],
+   ["read","📄","読解","文章を読んで答える"],
+   ["vocab","🔤","語彙・文法","空欄補充・意味・慣用句"],
+   ["next","💬","会話の流れ","次のひとことを選ぶ"],
+   ["word","📚","単語","TOPIK単語帳から4択"]]},
+ {key:"n", q:"どのくらいやる?", opts:[
+   ["5","☕","サクッと","5問・約3分"],
+   ["10","🚶","ふつう","10問・約6分"],
+   ["20","🏃","しっかり","20問・約12分"]]},
+];
+const GD_LABEL = {goal:{topik:"TOPIK対策",kaiwa:"会話力",review:"弱点つぶし",mix:"バランス"}, lv:{a:"初級",b:"中級",c:"上級",all:"全レベル"},
+  skill:{listen:"聞き取り",read:"読解",vocab:"語彙・文法",next:"会話の流れ",word:"単語"}};
+let gdAns = {goal:"", lv:"", skill:[], n:""};
+let gdSaved = false;
+try{ const s = JSON.parse(localStorage.getItem("hj.guide")||"null"); if(s && s.goal && s.lv && s.n){ gdAns = Object.assign(gdAns, s); gdSaved = true; } }catch(e){}
+let gdStep = 0, gdQueue = [], gdIdx = 0, gdScoreN = 0, gdLocked = false, gdWrongs = [], gdByKind = {};
+const GD_KIND = {tk:"TOPIK", nx:"会話の流れ", ph:"フレーズ聞き取り", wd:"単語"};
+function gdLvSet(){ return gdAns.lv==="a" ? [1,2] : gdAns.lv==="b" ? [3,4] : gdAns.lv==="c" ? [5,6] : [1,2,3,4,5,6]; }
+function gdSummary(a){
+  a = a || gdAns;
+  const sk = (a.skill||[]).map(k=>GD_LABEL.skill[k]).filter(Boolean).join("・");
+  return (GD_LABEL.goal[a.goal]||"")+" / "+(GD_LABEL.lv[a.lv]||"")+" / "+(sk||"おまかせ")+" / "+(a.n||10)+"問";
+}
+function gdOpen(){ if(document.getElementById("gdPlay").hidden) gdRenderWiz(); }
+function gdRenderWiz(){
+  const box = document.getElementById("gdWiz");
+  box.hidden = false;
+  document.getElementById("gdPlay").hidden = true;
+  const st = GD_STEPS[gdStep];
+  box.innerHTML = "<div class='gd-steps'>"+GD_STEPS.map((s,i)=>"<span class='"+(i<=gdStep?"on":"")+"'></span>").join("")+"</div>"+
+    "<div class='hint' style='margin:0 0 2px'>質問 "+(gdStep+1)+" / "+GD_STEPS.length+"</div>"+
+    "<div class='gd-q'>"+st.q+"</div>";
+  const opts = document.createElement("div");
+  opts.className = "gd-opts";
+  st.opts.forEach(o=>{
+    const b = document.createElement("button");
+    const sel = st.multi ? (gdAns[st.key]||[]).includes(o[0]) : gdAns[st.key]===o[0];
+    b.setAttribute("aria-pressed", sel);
+    b.innerHTML = "<span class='ic'>"+o[1]+"</span><span class='t'>"+o[2]+"</span><span class='d'>"+o[3]+"</span>";
+    b.addEventListener("click",()=>{
+      if(st.multi){
+        const cur = new Set(gdAns[st.key]||[]);
+        cur.has(o[0]) ? cur.delete(o[0]) : cur.add(o[0]);
+        gdAns[st.key] = [...cur];
+        b.setAttribute("aria-pressed", cur.has(o[0]));
+      } else {
+        gdAns[st.key] = o[0];
+        opts.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+        setTimeout(gdNext, 160);
+      }
+    });
+    opts.appendChild(b);
+  });
+  box.appendChild(opts);
+  const msg = document.createElement("p");
+  msg.className = "hint"; msg.id = "gdMsg"; msg.style.margin = "8px 0 0";
+  box.appendChild(msg);
+  const nav = document.createElement("div");
+  nav.className = "gd-nav";
+  const back = document.createElement("button");
+  back.className = "btn ghost"; back.textContent = "← 戻る";
+  back.disabled = gdStep===0;
+  back.addEventListener("click",()=>{ gdStep--; gdRenderWiz(); });
+  const nx = document.createElement("button");
+  nx.className = "btn"; nx.textContent = gdStep===GD_STEPS.length-1 ? "スタート ▶" : "次へ →";
+  nx.addEventListener("click", gdNext);
+  nav.append(back, nx);
+  box.appendChild(nav);
+  if(gdStep===0 && gdSaved){
+    const q = document.createElement("div");
+    q.className = "tk-ex";
+    q.style.marginTop = "12px";
+    q.innerHTML = "⚡ 前回の設定: <b>"+tkEsc(gdSummary())+"</b> ";
+    const qb = document.createElement("button");
+    qb.className = "btn"; qb.style.cssText = "margin-left:6px;padding:5px 13px;font-size:12px";
+    qb.textContent = "この設定ですぐ始める";
+    qb.addEventListener("click", gdStart);
+    q.appendChild(qb);
+    box.appendChild(q);
+  }
+}
+function gdNext(){
+  const st = GD_STEPS[gdStep];
+  const v = gdAns[st.key];
+  if(st.multi ? !(v && v.length) : !v){
+    const m = document.getElementById("gdMsg"); if(m) m.textContent = "⚠️ ひとつ選んでください。";
+    return;
+  }
+  if(gdStep < GD_STEPS.length-1){ gdStep++; gdRenderWiz(); }
+  else gdStart();
+}
+function gdBuild(){
+  const lvs = gdLvSet();
+  const sk = new Set(gdAns.skill && gdAns.skill.length ? gdAns.skill : ["listen","read","vocab","next"]);
+  const goal = gdAns.goal || "mix", n = parseInt(gdAns.n,10) || 10;
+  const lanes = [];
+  const tkTy = [];
+  if(sk.has("listen")) tkTy.push("聞");
+  if(goal!=="kaiwa"){
+    if(sk.has("read")) tkTy.push("読");
+    if(sk.has("vocab")) tkTy.push("語彙","文法");
+  }
+  if(tkTy.length){
+    let pool = TOPIK.map((q,i)=>({kind:"tk", i:i, q:q})).filter(x=>lvs.includes(x.q.lv) && tkTy.includes(x.q.ty));
+    if(goal==="review"){
+      const w = new Set(tkWrong);
+      pool = tkShuffle(pool.filter(x=>w.has(x.i))).concat(tkShuffle(pool.filter(x=>!w.has(x.i))));
+    } else pool = tkShuffle(pool);
+    lanes.push(pool);
+    if(goal==="topik") lanes.push(pool);
+  }
+  if(sk.has("next") || goal==="kaiwa") lanes.push(tkShuffle(NEXTLINE.map((x,i)=>({kind:"nx", i:i, x:x}))));
+  if(goal==="kaiwa" && (sk.has("listen") || sk.has("vocab"))) lanes.push(tkShuffle(FLAT.map(p=>({kind:"ph", p:p}))));
+  if(sk.has("word") || (goal==="kaiwa" && sk.has("read"))){
+    let pool = TKWORDS.filter(w=>lvs.includes(w.lv)).map(w=>({kind:"wd", w:w}));
+    if(goal==="review"){
+      const weak = x=>srs[x.w.kr] && srs[x.w.kr].iv===0;
+      pool = tkShuffle(pool.filter(weak)).concat(tkShuffle(pool.filter(x=>!weak(x))));
+    } else pool = tkShuffle(pool);
+    lanes.push(pool);
+  }
+  if(!lanes.length) lanes.push(tkShuffle(TOPIK.map((q,i)=>({kind:"tk", i:i, q:q})).filter(x=>lvs.includes(x.q.lv))));
+  const out = [];
+  let li = 0;
+  while(out.length < n && lanes.some(l=>l.length)){
+    const lane = lanes[li % lanes.length]; li++;
+    if(lane.length) out.push(lane.shift());
+  }
+  return out;
+}
+function gdStart(){
+  try{ localStorage.setItem("hj.guide", JSON.stringify(gdAns)); }catch(e){}
+  gdSaved = true;
+  gdQueue = gdBuild();
+  if(!gdQueue.length){ gdRenderWiz(); const m = document.getElementById("gdMsg"); if(m) m.textContent = "⚠️ この条件に合う問題がありません。条件を変えてみてください。"; return; }
+  gdIdx = 0; gdScoreN = 0; gdWrongs = []; gdByKind = {};
+  document.getElementById("gdWiz").hidden = true;
+  document.getElementById("gdPlay").hidden = false;
+  document.getElementById("gdQuit").hidden = false;
+  gdRenderQ();
+  window.scrollTo(0, 0);
+}
+function gdRenderQ(){
+  gdLocked = false;
+  const it = gdQueue[gdIdx];
+  document.getElementById("gdInfo").innerHTML = "<span class='tk-badge'>"+GD_KIND[it.kind]+(it.q?"・"+it.q.lv+"級":it.w?"・"+it.w.lv+"級":"")+"</span> 第"+(gdIdx+1)+"問 / "+gdQueue.length;
+  document.getElementById("gdScore").textContent = "正解 "+gdScoreN;
+  document.getElementById("gdBar").style.width = Math.round(gdIdx/gdQueue.length*100)+"%";
+  const body = document.getElementById("gdBody");
+  body.innerHTML = "";
+  let choices, correct, kr = false, replay = null;
+  if(it.kind==="tk"){
+    const q = it.q;
+    if(q.ps){ const p = document.createElement("div"); p.className = "tk-passage kr"; p.textContent = q.ps; body.appendChild(p); }
+    if(q.au){ replay = ()=>speak(q.au, q.lv<=2?0.75:0.85); }
+    body.insertAdjacentHTML("beforeend","<div class='tk-q"+(/[가-힣]/.test(q.q)?" kr":"")+"'>"+tkEsc(q.q)+"</div>");
+    correct = q.c[0]; choices = q.c; kr = /[가-힣]/.test(q.c[0]);
+  } else if(it.kind==="nx"){
+    const x = it.x, s = nxSplit(x.p);
+    body.insertAdjacentHTML("beforeend","<div class='hint' style='margin:0 0 6px'>相手のセリフに自然につながる返事はどれ?</div>"+
+      (s.scene?"<div style='font-size:12px;color:var(--ink-soft);font-weight:700'>🎬 "+tkEsc(s.scene)+"</div>":"")+
+      "<div class='kr' style='font-size:20px;font-weight:700;line-height:1.5'>💬 "+tkEsc(s.kr)+"</div>"+
+      "<div style='font-size:12px;color:var(--ink-soft);margin:2px 0 6px'>"+tkEsc(x.pk)+" — "+tkEsc(x.pj)+"</div>");
+    replay = ()=>speak(s.speech, 0.85);
+    correct = x.c[0][0]; choices = x.c.map(c=>c[0]); kr = true;
+  } else if(it.kind==="ph"){
+    body.insertAdjacentHTML("beforeend","<div class='tk-q'>音声を聞いて、意味を選んでください</div>");
+    replay = ()=>speak(it.p.kr, 0.8);
+    correct = it.p.jp; choices = [...pickWrongs(FLAT, x=>x.jp, correct, 3), correct];
+  } else {
+    const w = it.w, mode = it.mode = (it.mode===undefined ? Math.floor(Math.random()*3) : it.mode);
+    const others = tkShuffle(TKWORDS.filter(x=>x.lv===w.lv && x.kr!==w.kr)).slice(0,3);
+    if(mode===0){
+      body.insertAdjacentHTML("beforeend","<div class='tk-q'>この単語の意味は?</div><div style='text-align:center;font-size:44px;font-weight:700;color:var(--indigo)' class='kr'>"+tkEsc(w.kr)+"</div>");
+      correct = w.jp; choices = others.map(x=>x.jp).concat([correct]); replay = ()=>speak(w.kr, 0.8);
+    } else if(mode===1){
+      body.insertAdjacentHTML("beforeend","<div class='tk-q'>音声の単語はどれ?</div>");
+      correct = w.kr; choices = others.map(x=>x.kr).concat([correct]); kr = true; replay = ()=>speak(w.kr, 0.7);
+    } else {
+      body.insertAdjacentHTML("beforeend","<div class='tk-q'>「"+tkEsc(w.jp)+"」を韓国語で?</div>");
+      correct = w.kr; choices = others.map(x=>x.kr).concat([correct]); kr = true;
+    }
+  }
+  if(replay){
+    const l = document.createElement("div");
+    l.className = "tk-listen";
+    const b = document.createElement("button");
+    b.textContent = "🔊 音声を聞く";
+    b.addEventListener("click", replay);
+    l.appendChild(b);
+    body.insertBefore(l, body.querySelector(".tk-q") && it.kind==="tk" ? body.querySelector(".tk-q") : null);
+    replay();
+  }
+  const box = document.createElement("div");
+  box.className = "tk-choices";
+  tkShuffle(choices).forEach(opt=>{
+    const b = document.createElement("button");
+    if(kr || /[가-힣]/.test(opt)) b.classList.add("kr");
+    b.textContent = opt;
+    b.addEventListener("click",()=>gdAnswer(b, opt, correct, it, box));
+    box.appendChild(b);
+  });
+  body.appendChild(box);
+}
+function gdAnswer(btn, opt, correct, it, box){
+  if(gdLocked) return;
+  gdLocked = true;
+  const ok = opt===correct;
+  const k = gdByKind[it.kind] || {s:0,c:0}; k.s++; if(ok) k.c++; gdByKind[it.kind] = k;
+  if(ok){ gdScoreN++; btn.classList.add("hit"); }
+  else {
+    btn.classList.add("miss");
+    [...box.children].forEach(b=>{ if(b.textContent===correct) b.classList.add("hit"); });
+    gdWrongs.push(it);
+  }
+  let html = ok ? "⭕ <b>正解!</b>" : "❌ 正解は「<span class='kr'>"+tkEsc(correct)+"</span>」";
+  if(it.kind==="tk"){
+    tkRecord(it.i, ok);
+    if(it.q.au) html += "<br>🎧 スクリプト: <span class='kr'>"+tkEsc(it.q.au)+"</span>";
+    if(it.q.ex) html += "<br>💡 "+tkEsc(it.q.ex);
+  } else if(it.kind==="nx"){
+    html += "<br><span class='kr'>"+tkEsc(it.x.c[0][0])+"</span>「"+tkEsc(it.x.c[0][1])+"」"+(it.x.ex?"<br>💡 "+tkEsc(it.x.ex):"");
+    if(!ok && srsAddExtra("次のひとこと", it.x.c[0][0], "", it.x.c[0][1])) html += "<br>📥 復習に追加しました";
+    speak(correct, 0.85);
+  } else if(it.kind==="ph"){
+    html += "<br><span class='kr'>"+tkEsc(it.p.kr)+"</span>("+tkEsc(it.p.kana)+")= "+tkEsc(it.p.jp);
+    if(!ok && srsAddExtra(it.p.cat, it.p.kr, it.p.kana, it.p.jp)) html += "<br>📥 復習に追加しました";
+  } else {
+    html += "<br><span class='kr'>"+tkEsc(it.w.kr)+"</span>("+tkEsc(it.w.kana)+" / "+tkEsc(it.w.rom)+")= "+tkEsc(it.w.jp);
+    if(!ok){ wtWrongToSrs(it.w); html += "<br>📥 復習に追加しました"; }
+    speak(it.w.kr, 0.8);
+  }
+  document.getElementById("gdScore").textContent = "正解 "+gdScoreN;
+  const body = document.getElementById("gdBody");
+  body.insertAdjacentHTML("beforeend","<div class='tk-ex'>"+html+"</div>");
+  const nx = document.createElement("div");
+  nx.style.cssText = "margin-top:10px;text-align:center";
+  const nb = document.createElement("button");
+  nb.className = "btn";
+  nb.textContent = gdIdx+1 < gdQueue.length ? "次の問題 →" : "結果を見る";
+  nb.addEventListener("click",()=>{ gdIdx++; if(gdIdx < gdQueue.length) gdRenderQ(); else gdResult(); });
+  nx.appendChild(nb);
+  body.appendChild(nx);
+  nb.scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+function gdResult(){
+  const n = gdQueue.length, rate = Math.round(gdScoreN/n*100);
+  document.getElementById("gdInfo").innerHTML = "<span class='tk-badge'>結果</span> "+tkEsc(gdSummary());
+  document.getElementById("gdScore").textContent = "";
+  document.getElementById("gdBar").style.width = "100%";
+  document.getElementById("gdQuit").hidden = true;
+  const body = document.getElementById("gdBody");
+  const msg = rate>=90 ? "🎉 素晴らしい!この調子で次のレベルへ。" : rate>=70 ? "💪 いい調子!間違えた所を復習すれば完璧です。" : "📚 解説を読み直して、もう一度チャレンジしましょう。";
+  let sum = "<div class='gd-sum'>"+Object.keys(gdByKind).map(k=>"<div class='st'><b>"+gdByKind[k].c+"/"+gdByKind[k].s+"</b>"+GD_KIND[k]+"</div>").join("")+"</div>";
+  let wrong = "";
+  if(gdWrongs.length){
+    wrong = "<div class='tk-wrong'><b>今回間違えた問題("+gdWrongs.length+"問・復習デッキに追加済み):</b>"+gdWrongs.map(it=>{
+      if(it.kind==="tk") return "<div class='w'>"+tkEsc(it.q.q)+"<br>→ <b class='kr'>"+tkEsc(it.q.c[0])+"</b></div>";
+      if(it.kind==="nx") return "<div class='w'><span class='kr'>"+tkEsc(nxSplit(it.x.p).kr)+"</span><br>→ <b class='kr'>"+tkEsc(it.x.c[0][0])+"</b></div>";
+      if(it.kind==="ph") return "<div class='w'><span class='kr'>"+tkEsc(it.p.kr)+"</span> → "+tkEsc(it.p.jp)+"</div>";
+      return "<div class='w'><span class='kr'>"+tkEsc(it.w.kr)+"</span> → "+tkEsc(it.w.jp)+"</div>";
+    }).join("")+"</div>";
+  }
+  body.innerHTML = "<div class='tk-result'><div class='big'>"+gdScoreN+" / "+n+"</div><div class='msg'>"+msg+"</div>"+sum+
+    "<div style='display:flex;gap:8px;justify-content:center;flex-wrap:wrap'>"+
+    "<button class='btn' id='gdAgain'>もう一度(同じ設定)</button>"+
+    "<button class='btn ghost' id='gdChange'>設定を変える</button>"+
+    "<button class='btn ghost' id='gdHome'>ホームへ</button></div>"+wrong+"</div>";
+  document.getElementById("gdAgain").addEventListener("click", gdStart);
+  document.getElementById("gdChange").addEventListener("click",()=>{ gdStep = 0; gdRenderWiz(); window.scrollTo(0,0); });
+  document.getElementById("gdHome").addEventListener("click",()=>showPane("home"));
+  srsBadge();
+}
+document.getElementById("gdQuit").addEventListener("click",()=>{ gdStep = 0; gdRenderWiz(); window.scrollTo(0,0); });
+
 /* ================= ホーム ================= */
 const HOME_MENU = [
- {icon:"✏️", t:"文字をおぼえる", d:"ハングル表・発音・覚えたチェック", go:()=>showPane("moji")},
- {icon:"💬", t:"フレーズ", d:"16カテゴリ531フレーズ+丁寧⇔タメ口対応表", go:()=>showPane("kaiwa")},
- {icon:"🧩", t:"文字の組み立て", d:"子音+母音+パッチムで1文字を作る", go:()=>showPane("kumitate")},
- {icon:"📐", t:"文法・文の型", d:"40の型を覚えて自分の文を作る", go:()=>showPane("bunpo")},
- {icon:"🎧", t:"クイズ", d:"読み・聞き取り・会話の流れを腕試し", go:()=>showPane("quiz")},
- {icon:"📖", t:"TOPIK問題", d:"全6級600問・日本語解説つき", go:()=>{showPane("topik"); tkSetMode("quiz");}},
- {icon:"📚", t:"TOPIK単語帳", d:"頻出360語・検索と発音チェック", go:()=>{showPane("topik"); tkSetMode("vocab");}},
- {icon:"🃏", t:"単語テスト", d:"4択テスト。間違いは復習へ自動追加", go:()=>{showPane("topik"); tkSetMode("wtest");}},
- {icon:"🔁", t:"きょうの復習", d:"忘れる前にもう一度(SRS)", go:()=>showPane("fukushu"), badge:true},
- {icon:"🎧", t:"リスニング会話", d:"2〜3人の会話ドラマで耳をきたえる", go:()=>{showPane("renshu"); rSetMode("listen");}},
- {icon:"🗣", t:"会話練習", d:"シナリオ会話とローカルAIフリートーク", go:()=>showPane("renshu")},
- {icon:"💾", t:"記録のバックアップ", d:"別の端末への引き継ぎ・データ保存", go:()=>{const b=document.getElementById("backupBox"); b.hidden=!b.hidden; if(!b.hidden) b.scrollIntoView({behavior:"smooth"});}},
- {icon:"👤", t:"アカウント", d:"ログインして記録をクラウドに同期", go:()=>{const b=document.getElementById("accountBox"); b.hidden=!b.hidden; if(!b.hidden){b.scrollIntoView({behavior:"smooth"}); fbInit();}}},
- {icon:"🔊", t:"音声設定", d:"OpenAIの高品質な韓国語音声に切替", go:()=>{const b=document.getElementById("voiceBox"); b.hidden=!b.hidden; if(!b.hidden) b.scrollIntoView({behavior:"smooth"});}},
+ {sec:"まなぶ", icon:"✏️", t:"文字をおぼえる", d:"ハングル表・発音・覚えたチェック", go:()=>showPane("moji")},
+ {sec:"まなぶ", icon:"💬", t:"フレーズ", d:"16カテゴリ531フレーズ+丁寧⇔タメ口対応表", go:()=>showPane("kaiwa")},
+ {sec:"まなぶ", icon:"🧩", t:"文字の組み立て", d:"子音+母音+パッチムで1文字を作る", go:()=>showPane("kumitate")},
+ {sec:"まなぶ", icon:"📐", t:"文法・文の型", d:"40の型を覚えて自分の文を作る", go:()=>showPane("bunpo")},
+ {sec:"テスト", icon:"🎧", t:"クイズ", d:"読み・聞き取り・会話の流れを腕試し", go:()=>showPane("quiz")},
+ {sec:"テスト", icon:"📖", t:"TOPIK問題", d:"全6級600問・日本語解説つき", go:()=>{showPane("topik"); tkSetMode("quiz");}},
+ {sec:"テスト", icon:"📚", t:"TOPIK単語帳", d:"頻出360語・検索と発音チェック", go:()=>{showPane("topik"); tkSetMode("vocab");}},
+ {sec:"テスト", icon:"🃏", t:"単語テスト", d:"4択テスト。間違いは復習へ自動追加", go:()=>{showPane("topik"); tkSetMode("wtest");}},
+ {sec:"テスト", icon:"🔁", t:"きょうの復習", d:"忘れる前にもう一度(SRS)", go:()=>showPane("fukushu"), badge:true},
+ {sec:"会話", icon:"🎧", t:"リスニング会話", d:"2〜3人の会話ドラマで耳をきたえる", go:()=>{showPane("renshu"); rSetMode("listen");}},
+ {sec:"会話", icon:"🗣", t:"会話練習", d:"シナリオ会話とローカルAIフリートーク", go:()=>showPane("renshu")},
+ {sec:"記録・設定", icon:"💾", t:"記録のバックアップ", d:"別の端末への引き継ぎ・データ保存", go:()=>{const b=document.getElementById("backupBox"); b.hidden=!b.hidden; if(!b.hidden) b.scrollIntoView({behavior:"smooth"});}},
+ {sec:"記録・設定", icon:"👤", t:"アカウント", d:"ログインして記録をクラウドに同期", go:()=>{const b=document.getElementById("accountBox"); b.hidden=!b.hidden; if(!b.hidden){b.scrollIntoView({behavior:"smooth"}); fbInit();}}},
+ {sec:"記録・設定", icon:"🔊", t:"音声設定", d:"OpenAIの高品質な韓国語音声に切替", go:()=>{const b=document.getElementById("voiceBox"); b.hidden=!b.hidden; if(!b.hidden) b.scrollIntoView({behavior:"smooth"});}},
 ];
 function tkSetMode(id){
   const i = TK_MODES.findIndex(m=>m.id===id);
@@ -4746,15 +5083,39 @@ function renderHome(){
     "<div class='st'><b>"+known.size+"</b><span>覚えた文字</span></div>"+
     "<div class='st'><b>"+tvKnown.size+"</b><span>覚えた単語</span></div>"+
     "<div class='st'><b>"+(seen?Math.round(cor/seen*100)+"%":"-")+"</b><span>TOPIK正答率</span></div>";
+  const hero = document.getElementById("homeHero");
+  hero.innerHTML = "<div class='hero'><h3>🎯 きょうは何をする?</h3><p>4つの質問に答えるだけで、"+TOPIK.length+"問のTOPIK・"+NEXTLINE.length+"問の会話・"+TKWORDS.length+"語の単語から、あなたに合う問題だけを選んで出題します。間違えた問題は自動で復習デッキへ。</p><div class='row'></div></div>";
+  const hrow = hero.querySelector(".row");
+  const hb = document.createElement("button");
+  hb.className = "btn"; hb.textContent = "質問に答えて始める";
+  hb.addEventListener("click",()=>{ gdStep = 0; showPane("guide"); gdRenderWiz(); });
+  hrow.appendChild(hb);
+  if(gdSaved){
+    const hq = document.createElement("button");
+    hq.className = "btn ghost"; hq.textContent = "⚡ 前回の設定で("+gdSummary()+")";
+    hq.addEventListener("click",()=>{ showPane("guide"); gdStart(); });
+    hrow.appendChild(hq);
+  }
   const menu = document.getElementById("homeMenu");
   menu.innerHTML = "";
-  HOME_MENU.forEach(m=>{
-    const c = document.createElement("button");
-    c.className = "hcard";
-    c.innerHTML = "<span class='hic'>"+m.icon+(m.badge&&due?"<span class='hbdg'>"+due+"</span>":"")+"</span>"+
-      "<span class='ht'>"+m.t+"</span><span class='hd'>"+m.d+"</span>";
-    c.addEventListener("click", m.go);
-    menu.appendChild(c);
+  menu.className = "";
+  const secs = [];
+  HOME_MENU.forEach(m=>{ if(!secs.includes(m.sec)) secs.push(m.sec); });
+  secs.forEach(sec=>{
+    const h = document.createElement("div");
+    h.className = "home-sec"; h.textContent = sec;
+    menu.appendChild(h);
+    const grid = document.createElement("div");
+    grid.className = "home-menu"+(sec==="記録・設定" ? " compact" : "");
+    HOME_MENU.filter(m=>m.sec===sec).forEach(m=>{
+      const c = document.createElement("button");
+      c.className = "hcard";
+      c.innerHTML = "<span class='hic'>"+m.icon+(m.badge&&due?"<span class='hbdg'>"+due+"</span>":"")+"</span>"+
+        "<span class='ht'>"+m.t+"</span><span class='hd'>"+m.d+"</span>";
+      c.addEventListener("click", m.go);
+      grid.appendChild(c);
+    });
+    menu.appendChild(grid);
   });
   renderHomeDaily();
 }
